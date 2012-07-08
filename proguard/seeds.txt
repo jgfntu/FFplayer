@@ -1,0 +1,62 @@
+com.media.ffmpeg.FFMpeg
+com.media.ffmpeg.FFMpeg: void native_avcodec_register_all()
+com.media.ffmpeg.FFMpeg: void native_av_register_all()
+com.media.ffmpeg.FFMpeg: void native_av_init()
+com.media.ffmpeg.FFMpeg: com.media.ffmpeg.FFMpegAVFormatContext native_av_setInputFile(java.lang.String)
+com.media.ffmpeg.FFMpeg: com.media.ffmpeg.FFMpegAVFormatContext native_av_setOutputFile(java.lang.String)
+com.media.ffmpeg.FFMpeg: int native_av_setBitrate(java.lang.String,java.lang.String)
+com.media.ffmpeg.FFMpeg: void native_av_newVideoStream(int)
+com.media.ffmpeg.FFMpeg: void native_av_setAudioRate(int)
+com.media.ffmpeg.FFMpeg: void native_av_setAudioChannels(int)
+com.media.ffmpeg.FFMpeg: void native_av_setVideoChannel(int)
+com.media.ffmpeg.FFMpeg: com.media.ffmpeg.FFMpegAVRational native_av_setFrameRate(int)
+com.media.ffmpeg.FFMpeg: void native_av_setFrameAspectRatio(int,int)
+com.media.ffmpeg.FFMpeg: void native_av_setVideoCodec(java.lang.String)
+com.media.ffmpeg.FFMpeg: void native_av_setFrameSize(int,int)
+com.media.ffmpeg.FFMpeg: void native_av_parse_options(java.lang.String[])
+com.media.ffmpeg.FFMpeg: void native_av_convert()
+com.media.ffmpeg.FFMpeg: int native_av_release(int)
+com.media.ffmpeg.FFMpegAVCodecContext
+com.media.ffmpeg.FFMpegAVCodecContext: void release()
+com.media.ffmpeg.FFMpegAVCodecTag$CodecID: com.media.ffmpeg.FFMpegAVCodecTag$CodecID[] values()
+com.media.ffmpeg.FFMpegAVCodecTag$CodecID: com.media.ffmpeg.FFMpegAVCodecTag$CodecID valueOf(java.lang.String)
+com.media.ffmpeg.FFMpegAVFormatContext
+com.media.ffmpeg.FFMpegAVFormatContext: void nativeRelease(int)
+com.media.ffmpeg.FFMpegAVFrame
+com.media.ffmpeg.FFMpegAVFrame: void nativeRelease(int)
+com.media.ffmpeg.FFMpegAVInputFormat
+com.media.ffmpeg.FFMpegAVInputFormat: void nativeRelease(int)
+com.media.ffmpeg.FFMpegAVRational
+com.media.ffmpeg.FFMpegAVRational: void nativeRelease(int)
+com.media.ffmpeg.FFMpegPlayer
+com.media.ffmpeg.FFMpegPlayer: void _setVideoSurface(android.view.Surface)
+com.media.ffmpeg.FFMpegPlayer: void setDataSource(java.lang.String)
+com.media.ffmpeg.FFMpegPlayer: void prepare()
+com.media.ffmpeg.FFMpegPlayer: void _start()
+com.media.ffmpeg.FFMpegPlayer: void _stop()
+com.media.ffmpeg.FFMpegPlayer: void _pause()
+com.media.ffmpeg.FFMpegPlayer: int getVideoWidth()
+com.media.ffmpeg.FFMpegPlayer: int getVideoHeight()
+com.media.ffmpeg.FFMpegPlayer: boolean isPlaying()
+com.media.ffmpeg.FFMpegPlayer: void seekTo(int)
+com.media.ffmpeg.FFMpegPlayer: int getCurrentPosition()
+com.media.ffmpeg.FFMpegPlayer: int getDuration()
+com.media.ffmpeg.FFMpegPlayer: void _release()
+com.media.ffmpeg.FFMpegPlayer: void _reset()
+com.media.ffmpeg.FFMpegPlayer: int native_suspend_resume(boolean)
+com.media.ffmpeg.FFMpegPlayer: void setAudioStreamType(int)
+com.media.ffmpeg.FFMpegPlayer: void native_init()
+com.media.ffmpeg.FFMpegPlayer: void native_setup(java.lang.Object)
+com.media.ffmpeg.FFMpegPlayer: void native_finalize()
+com.media.ffmpeg.FFMpegUtils
+com.media.ffmpeg.FFMpegUtils: com.media.ffmpeg.FFMpegAVFormatContext native_av_setInputFile(java.lang.String)
+com.media.ffmpeg.FFMpegUtils: void native_av_setOutput(java.lang.String)
+com.media.ffmpeg.FFMpegUtils: void native_av_print(int)
+com.media.ffmpeg.FFMpegUtils: void native_av_release()
+com.media.ffmpeg.android.FFMpegMovieViewAndroid
+com.media.ffmpeg.android.FFMpegMovieViewAndroid: FFMpegMovieViewAndroid(android.content.Context,android.util.AttributeSet)
+com.media.ffmpeg.android.FFMpegMovieViewAndroid: FFMpegMovieViewAndroid(android.content.Context,android.util.AttributeSet,int)
+faywong.ffmpeg.ui.FFMpegFileExplorer
+faywong.ffmpeg.ui.FFMpegFileExplorer: FFMpegFileExplorer()
+faywong.ffmpeg.ui.FFMpegPlayerActivity
+faywong.ffmpeg.ui.FFMpegPlayerActivity: FFMpegPlayerActivity()

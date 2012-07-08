@@ -1,0 +1,105 @@
+com.media.ffmpeg.FFMpeg -> com.media.ffmpeg.FFMpeg:
+    java.lang.String[] LIBS -> a
+    java.lang.String[] EXTENSIONS -> b
+    boolean sLoaded -> c
+    boolean mConverting -> d
+    boolean loadLibs() -> a
+    com.media.ffmpeg.android.FFMpegMovieViewAndroid getMovieView(android.content.Context) -> a
+    void finalize() -> finalize
+    void native_avcodec_register_all() -> native_avcodec_register_all
+    void native_av_register_all() -> native_av_register_all
+com.media.ffmpeg.FFMpegException -> com.media.ffmpeg.a:
+    int mLevel -> a
+com.media.ffmpeg.FFMpegPlayer -> com.media.ffmpeg.FFMpegPlayer:
+    android.view.Surface mSurface -> a
+    android.view.SurfaceHolder mSurfaceHolder -> b
+    android.os.PowerManager$WakeLock mWakeLock -> c
+    void setDisplay(android.view.SurfaceHolder) -> a
+    void start() -> a
+    void pause() -> b
+    void _setVideoSurface(android.view.Surface) -> _setVideoSurface
+    void setDataSource(java.lang.String) -> setDataSource
+    void prepare() -> prepare
+    void _start() -> _start
+    void _pause() -> _pause
+    boolean isPlaying() -> isPlaying
+    int getCurrentPosition() -> getCurrentPosition
+    int getDuration() -> getDuration
+    int native_suspend_resume(boolean) -> native_suspend_resume
+    void native_init() -> native_init
+    void native_setup(java.lang.Object) -> native_setup
+    void native_finalize() -> native_finalize
+    boolean suspend() -> c
+    boolean resume() -> d
+    void finalize() -> finalize
+com.media.ffmpeg.android.FFMpegMovieViewAndroid -> com.media.ffmpeg.android.FFMpegMovieViewAndroid:
+    com.media.ffmpeg.FFMpegPlayer mPlayer -> c
+    android.widget.MediaController mMediaController -> d
+    android.view.SurfaceHolder$Callback mSHCallback -> a
+    android.widget.MediaController$MediaPlayerControl mMediaPlayerControl -> b
+    void initVideoView() -> a
+    void setVideoPath(java.lang.String) -> a
+    boolean onTouchEvent(android.view.MotionEvent) -> onTouchEvent
+    void access$0(com.media.ffmpeg.android.FFMpegMovieViewAndroid) -> a
+    void access$1(com.media.ffmpeg.android.FFMpegMovieViewAndroid,android.view.SurfaceHolder) -> a
+    void access$2(com.media.ffmpeg.android.FFMpegMovieViewAndroid) -> b
+    android.widget.MediaController access$3(com.media.ffmpeg.android.FFMpegMovieViewAndroid) -> c
+    com.media.ffmpeg.FFMpegPlayer access$4(com.media.ffmpeg.android.FFMpegMovieViewAndroid) -> d
+com.media.ffmpeg.android.FFMpegMovieViewAndroid$1 -> com.media.ffmpeg.android.a:
+    com.media.ffmpeg.android.FFMpegMovieViewAndroid this$0 -> a
+    void surfaceChanged(android.view.SurfaceHolder,int,int,int) -> surfaceChanged
+    void surfaceCreated(android.view.SurfaceHolder) -> surfaceCreated
+    void surfaceDestroyed(android.view.SurfaceHolder) -> surfaceDestroyed
+com.media.ffmpeg.android.FFMpegMovieViewAndroid$2 -> com.media.ffmpeg.android.b:
+    com.media.ffmpeg.android.FFMpegMovieViewAndroid this$0 -> a
+    void start() -> start
+    void seekTo(int) -> seekTo
+    void pause() -> pause
+    boolean isPlaying() -> isPlaying
+    int getDuration() -> getDuration
+    int getCurrentPosition() -> getCurrentPosition
+    int getBufferPercentage() -> getBufferPercentage
+    boolean canPause() -> canPause
+    boolean canSeekBackward() -> canSeekBackward
+    boolean canSeekForward() -> canSeekForward
+faywong.ffmpeg.ui.FFMpegFileExplorer -> faywong.ffmpeg.ui.FFMpegFileExplorer:
+    java.lang.String mRoot -> a
+    android.widget.TextView mTextViewLocation -> b
+    java.io.File[] mFiles -> c
+    android.widget.EditText mUrlEditText -> d
+    void onCreate(android.os.Bundle) -> onCreate
+    boolean checkExtension(java.io.File) -> a
+    void getDirectory(java.lang.String) -> a
+    void onListItemClick(android.widget.ListView,android.view.View,int,long) -> onListItemClick
+    void startPlayer(java.lang.String) -> b
+    android.widget.EditText access$0(faywong.ffmpeg.ui.FFMpegFileExplorer) -> a
+    void access$1(faywong.ffmpeg.ui.FFMpegFileExplorer,java.lang.String) -> a
+faywong.ffmpeg.ui.FFMpegFileExplorer$1 -> faywong.ffmpeg.ui.a:
+    faywong.ffmpeg.ui.FFMpegFileExplorer this$0 -> a
+    void onClick(android.view.View) -> onClick
+faywong.ffmpeg.ui.FFMpegFileExplorer$2 -> faywong.ffmpeg.ui.b:
+    faywong.ffmpeg.ui.FFMpegFileExplorer this$0 -> a
+    int compare(java.lang.Object,java.lang.Object) -> compare
+faywong.ffmpeg.ui.FFMpegMessageBox -> faywong.ffmpeg.ui.c:
+    android.app.AlertDialog dialog -> a
+    void show(android.content.Context,java.lang.String,java.lang.String) -> a
+    void show(android.content.Context,java.lang.Exception) -> a
+    void reCycle() -> a
+faywong.ffmpeg.ui.FFMpegMessageBox$1 -> faywong.ffmpeg.ui.d:
+    void onClick(android.content.DialogInterface,int) -> onClick
+faywong.ffmpeg.ui.FFMpegPlayerActivity -> faywong.ffmpeg.ui.FFMpegPlayerActivity:
+    com.media.ffmpeg.android.FFMpegMovieViewAndroid mMovieView -> a
+    void onCreate(android.os.Bundle) -> onCreate
+    void onPause() -> onPause
+faywong.ffmpeg.ui.FileExplorerAdapter -> faywong.ffmpeg.ui.e:
+    java.io.File[] mFiles -> a
+    android.view.LayoutInflater mInflater -> b
+    android.content.Context mContext -> c
+    boolean isTop -> d
+    int getCount() -> getCount
+    java.lang.Object getItem(int) -> getItem
+    long getItemId(int) -> getItemId
+    android.view.View getView(int,android.view.View,android.view.ViewGroup) -> getView
+faywong.ffmpeg.ui.FileExplorerAdapter$ViewHolder -> faywong.ffmpeg.ui.f:
+    android.widget.TextView text -> a
+    android.widget.ImageView icon -> b

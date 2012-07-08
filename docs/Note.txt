@@ -1,0 +1,6 @@
+Contens:
+
+
+1) compile error
+   if you set the target android level to more than 8, the loading of the libjniaudio.so will jump a error(because of some difference of the implementation of AudioTrack) 
+   so you should set the target Android level to 8

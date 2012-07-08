@@ -1,0 +1,122 @@
+android.annotation.SuppressLint
+android.annotation.TargetApi
+com.media.ffmpeg.FFMpeg:
+    private java.lang.Thread mThread
+    private com.media.ffmpeg.FFMpeg$IFFMpegListener mListener
+    private com.media.ffmpeg.FFMpegFile mInputFile
+    private com.media.ffmpeg.FFMpegFile mOutputFile
+    76:76:public com.media.ffmpeg.FFMpegUtils getUtils()
+    80:80:public boolean isConverting()
+    84:85:public void setListener(com.media.ffmpeg.FFMpeg$IFFMpegListener)
+    88:88:public com.media.ffmpeg.FFMpegFile getOutputFile()
+    92:92:public com.media.ffmpeg.FFMpegFile getInputFile()
+    96:100:public void init(java.lang.String,java.lang.String)
+    103:112:public void setConfig(com.media.ffmpeg.config.FFMpegConfig)
+    119:120:public void setBitrate(java.lang.String)
+    123:124:public void setFrameAspectRatio(int,int)
+    127:128:public void setVideoCodec(java.lang.String)
+    131:132:public void setAudioRate(int)
+    135:136:public void setAudioChannels(int)
+    139:140:public void setFrameRate(int)
+    143:144:public void setFrameSize(int,int)
+    147:152:public com.media.ffmpeg.FFMpegFile setInputFile(java.lang.String)
+    156:161:public com.media.ffmpeg.FFMpegFile setOutputFile(java.lang.String)
+    165:166:public void newVideoStream(com.media.ffmpeg.FFMpegAVFormatContext)
+    169:180:public void convert()
+    183:196:public void convertAsync()
+    199:203:public void waitOnEnd()
+    206:207:public void release()
+    216:223:private void onReport(double,double,double)
+    private native void native_av_init()
+    private native com.media.ffmpeg.FFMpegAVFormatContext native_av_setInputFile(java.lang.String)
+    private native com.media.ffmpeg.FFMpegAVFormatContext native_av_setOutputFile(java.lang.String)
+    private native int native_av_setBitrate(java.lang.String,java.lang.String)
+    private native void native_av_newVideoStream(int)
+    private native void native_av_setAudioRate(int)
+    private native void native_av_setAudioChannels(int)
+    private native void native_av_setVideoChannel(int)
+    private native com.media.ffmpeg.FFMpegAVRational native_av_setFrameRate(int)
+    private native void native_av_setFrameAspectRatio(int,int)
+    private native void native_av_setVideoCodec(java.lang.String)
+    private native void native_av_setFrameSize(int,int)
+    private native void native_av_parse_options(java.lang.String[])
+    private native void native_av_convert()
+    private native int native_av_release(int)
+    36:36:static synthetic com.media.ffmpeg.FFMpeg$IFFMpegListener access$0(com.media.ffmpeg.FFMpeg)
+com.media.ffmpeg.FFMpeg$1
+com.media.ffmpeg.FFMpeg$IFFMpegListener
+com.media.ffmpeg.FFMpegAVClass
+com.media.ffmpeg.FFMpegAVCodecContext
+com.media.ffmpeg.FFMpegAVCodecTag
+com.media.ffmpeg.FFMpegAVCodecTag$CodecID
+com.media.ffmpeg.FFMpegAVFormatContext
+com.media.ffmpeg.FFMpegAVFormatContext$Duration
+com.media.ffmpeg.FFMpegAVFrame
+com.media.ffmpeg.FFMpegAVInputFormat
+com.media.ffmpeg.FFMpegAVOption
+com.media.ffmpeg.FFMpegAVOptionType
+com.media.ffmpeg.FFMpegAVOutputFormat
+com.media.ffmpeg.FFMpegAVRational
+com.media.ffmpeg.FFMpegException:
+    public static final int LEVEL_FATAL
+    public static final int LEVEL_ERROR
+    public static final int LEVEL_WARNING
+    17:17:public int getLevel()
+com.media.ffmpeg.FFMpegFile
+com.media.ffmpeg.FFMpegMediaScannerNotifier
+com.media.ffmpeg.FFMpegPlayer:
+    private static final int MEDIA_NOP
+    private static final int MEDIA_PREPARED
+    private static final int MEDIA_PLAYBACK_COMPLETE
+    private static final int MEDIA_BUFFERING_UPDATE
+    private static final int MEDIA_SEEK_COMPLETE
+    private static final int MEDIA_SET_VIDEO_SIZE
+    private static final int MEDIA_ERROR
+    private static final int MEDIA_INFO
+    public static final int MEDIA_ERROR_UNKNOWN
+    public static final int MEDIA_ERROR_SERVER_DIED
+    public static final int MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK
+    public static final int MEDIA_INFO_UNKNOWN
+    public static final int MEDIA_INFO_VIDEO_TRACK_LAGGING
+    public static final int MEDIA_INFO_BAD_INTERLEAVING
+    public static final int MEDIA_INFO_NOT_SEEKABLE
+    public static final int MEDIA_INFO_METADATA_UPDATE
+    public static final int MEDIA_INFO_FRAMERATE_VIDEO
+    public static final int MEDIA_INFO_FRAMERATE_AUDIO
+    private static final java.lang.String TAG
+    private int mNativeContext
+    private boolean mScreenOnWhilePlaying
+    private boolean mStayAwake
+    104:112:private static void postEventFromNative(java.lang.Object,int,int,int,java.lang.Object)
+    155:156:public void stop()
+    217:221:public void setScreenOnWhilePlaying(boolean)
+    private native void _stop()
+    public native int getVideoWidth()
+    public native int getVideoHeight()
+    public native void seekTo(int)
+    private native void _release()
+    private native void _reset()
+    public native void setAudioStreamType(int)
+    361:362:public void release()
+    371:372:public void reset()
+com.media.ffmpeg.FFMpegPlayer$IFFMpegPlayer
+com.media.ffmpeg.FFMpegReport
+com.media.ffmpeg.FFMpegUtils
+com.media.ffmpeg.android.FFMpegConfigAndroid
+com.media.ffmpeg.android.FFMpegMovieViewAndroid:
+    private static final java.lang.String TAG
+com.media.ffmpeg.config.FFMpegConfig
+faywong.ffmpeg.ui.BuildConfig
+faywong.ffmpeg.ui.FFMpegFileExplorer:
+    private static final java.lang.String TAG
+    private static final boolean DEBUG
+faywong.ffmpeg.ui.FFMpegMessageBox:
+    7:7:public FFMpegMessageBox()
+faywong.ffmpeg.ui.FFMpegPlayerActivity:
+    private static final java.lang.String TAG
+faywong.ffmpeg.ui.R
+faywong.ffmpeg.ui.R$attr
+faywong.ffmpeg.ui.R$drawable
+faywong.ffmpeg.ui.R$id
+faywong.ffmpeg.ui.R$layout
+faywong.ffmpeg.ui.R$string
