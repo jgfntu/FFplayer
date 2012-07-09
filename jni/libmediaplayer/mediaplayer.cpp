@@ -4,6 +4,10 @@
 
 //#define LOG_NDEBUG 0
 #define TAG "Native MediaPlayer"
+#define TAG_SOURCE "Native Source Thread"
+#define TAG_AUDIO "Native AudioDec Thread"
+#define TAG_VIDEO "Native VideoDec Thread"
+
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -38,6 +42,9 @@ extern "C" {
 #define FPS_DEBUGGING false
 
 static MediaPlayer* sPlayer;
+AVPacket BOS_PKT;
+AVPacket EOS_PKT;
+
 
 MediaPlayer::MediaPlayer()
 {
@@ -57,11 +64,18 @@ MediaPlayer::MediaPlayer()
     sPlayer = this;
     mJustSeeked = false;
     mNeedToSeek = false;
+
+    av_init_packet(&BOS_PKT);
+    BOS_PKT.data= reinterpret_cast<uint8_t *> (const_cast<char *> ("BOS_PACKET"));
+
+    av_init_packet(&EOS_PKT);
+    EOS_PKT.data= reinterpret_cast<uint8_t *> (const_cast<char *> ("BOS_PACKET"));
 }
 #define DELETE(obj)     \
 	do {                \
 		if (obj) {      \
 			delete obj; \
+			obj = NULL; \
 		}               \
 	} while (0);
 
@@ -73,7 +87,17 @@ MediaPlayer::~MediaPlayer()
 
 	DELETE(mDecoderVideo);
 	DELETE(mDecoderAudio);
+	__android_log_print(ANDROID_LOG_INFO, TAG, "~MediaPlayer() called!");
 }
+
+void MediaPlayer::clear_l()
+{
+    mDuration = -1;
+    mCurrentPosition = -1;
+    mSeekPosition = -1;
+    mVideoWidth = mVideoHeight = 0;
+}
+
 
 status_t MediaPlayer::prepareAudio()
 {
@@ -150,7 +174,7 @@ status_t MediaPlayer::prepareVideo()
 
 	mVideoWidth = codec_ctx->width;
 	mVideoHeight = codec_ctx->height;
-	mDuration =  mMovieFile->duration;
+	mDuration =  mMovieFile->duration / AV_TIME_BASE * 1000;
 
 	mConvertCtx = sws_getContext(stream->codec->width,
 								 stream->codec->height,
@@ -275,9 +299,10 @@ status_t MediaPlayer::suspend() {
 }
 
 status_t MediaPlayer::resume() {
-	//pthread_mutex_lock(&mLock);
+	pthread_mutex_lock(&mLock);
 	mCurrentState = MEDIA_PLAYER_STARTED;
-	//pthread_mutex_unlock(&mLock);
+	MediaClock::instance()->setCurClockStatus(MediaClock::CLOCK_KICKING);
+	pthread_mutex_unlock(&mLock);
     return NO_ERROR;
 }
 
@@ -332,6 +357,10 @@ void MediaPlayer::decode(AVFrame* frame, double pts)
 
 void MediaPlayer::decode(int16_t* buffer, int buffer_size)
 {
+	if (0 == buffer_size || NULL == buffer) {
+		return;
+	}
+
 	if(FPS_DEBUGGING) {
 		timeval pTime;
 		static int frames = 0;
@@ -350,8 +379,77 @@ void MediaPlayer::decode(int16_t* buffer, int buffer_size)
 	}
 
 	if(Output::AudioDriver_write(buffer, buffer_size) <= 0) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Couldn't write samples to audio track");
+		__android_log_print(ANDROID_LOG_ERROR, TAG, "Couldn't write samples to audio track, buffer:%p, size:%d", buffer, buffer_size);
 	}
+}
+
+status_t MediaPlayer::seekTo_l(int msec) {
+	__android_log_print(ANDROID_LOG_INFO, TAG, "seekTo_l %d", msec);
+	int ret;
+        if (mMovieFile->start_time != AV_NOPTS_VALUE)
+            msec += mMovieFile->start_time;
+
+        msec = msec * AV_TIME_BASE / 1000 ;
+    	__android_log_print(ANDROID_LOG_INFO, TAG, "The final seek ts:%d", msec);
+
+        ret = avformat_seek_file(mMovieFile, -1, INT64_MIN, msec, INT64_MAX, 0);
+
+    	__android_log_print(ANDROID_LOG_INFO, TAG, "The ret of avformat_seek_file (%d)", ret);
+
+        if (ret < 0) {
+            __android_log_print(ANDROID_LOG_INFO, TAG, "could not seek to position %0.3f\n",
+                    (double)msec);
+            return UNKNOWN_ERROR;
+        }
+
+    	__android_log_print(ANDROID_LOG_INFO, TAG, "Ready to flush Video queque");
+
+        BOS_PKT.pts = msec;
+
+        mDecoderVideo->flushDataQueue();
+		mDecoderVideo->enqueue(&BOS_PKT);
+
+
+    	__android_log_print(ANDROID_LOG_INFO, TAG, "Finished flush Video queque");
+
+    	__android_log_print(ANDROID_LOG_INFO, TAG, "Ready to flush Audio queque");
+
+    	/*TODO: first flush the dataQueue, then push some silent data to it, so as to feed the AudioTrack continously*/
+        mDecoderAudio->flushDataQueue();
+        mDecoderAudio->enqueue(&BOS_PKT);
+
+    	//__android_log_print(ANDROID_LOG_INFO, TAG, "Finished flush Audio queque");
+
+        mJustSeeked = true;
+       return NO_ERROR;
+}
+
+status_t MediaPlayer::seekTo(int msec)
+{
+	__android_log_print(ANDROID_LOG_INFO, TAG, "seekTo %d", msec);
+    if ((sPlayer != 0) && ( mCurrentState & ( MEDIA_PLAYER_STARTED | MEDIA_PLAYER_PREPARED | MEDIA_PLAYER_PAUSED |  MEDIA_PLAYER_PLAYBACK_COMPLETE) ) ) {
+        if ( msec < 0 ) {
+            __android_log_print(ANDROID_LOG_INFO, TAG, "Attempt to seek to invalid position: %d", msec);
+            msec = 0;
+        } else if ((mDuration > 0) && (msec > mDuration)) {
+            __android_log_print(ANDROID_LOG_INFO, TAG, "Attempt to seek to past end of file: request = %d, EOF = %d", msec, mDuration);
+            msec = mDuration;
+        }
+        // cache duration
+        mCurrentPosition = msec;
+        if (mSeekPosition < 0) {
+            mSeekPosition = msec;
+            //return sPlayer->seekTo_l(msec);
+        	__android_log_print(ANDROID_LOG_INFO, TAG, "setting mNeedToSeek to true!");
+            mNeedToSeek = true;
+            return NO_ERROR;
+        }
+        else {
+            __android_log_print(ANDROID_LOG_INFO, TAG, "Seek in progress - queue up seekTo[%d]", msec);
+            return NO_ERROR;
+        }
+    }
+    return INVALID_OPERATION;
 }
 
 void MediaPlayer::decodeMovie(void* ptr)
@@ -375,26 +473,24 @@ void MediaPlayer::decodeMovie(void* ptr)
 	while (mCurrentState != MEDIA_PLAYER_DECODED && mCurrentState != MEDIA_PLAYER_STOPPED &&
 		   mCurrentState != MEDIA_PLAYER_STATE_ERROR)
 	{
+		MediaClock::instance()->waitOnClock();
+
 		if (mDecoderVideo->packets() > FFMPEG_PLAYER_MAX_QUEUE_SIZE &&
 				mDecoderAudio->packets() > 2 * FFMPEG_PLAYER_MAX_QUEUE_SIZE) {
 			usleep(200);
 			continue;
 		}
 
-		/* pause/playing processing */
-		while (MEDIA_PLAYER_PAUSED == mCurrentState) {
-			usleep(300000);
-		}
-
 		if (mNeedToSeek) {
 			sPlayer->seekTo_l(mSeekPosition);
 			Output::AudioDriver_flush();
+			//Output::AudioDriver_reload();
 			mNeedToSeek = false;
 		}
 
 		int ret;
 		ret = av_read_frame(mMovieFile, &pPacket);
-		//__android_log_print(ANDROID_LOG_INFO, TAG, "av_read_frame ret:%d", ret);
+		__android_log_print(ANDROID_LOG_INFO, TAG_SOURCE, "av_read_frame ret:%d", ret);
 
 		if (ret < 0) {
 			if (ret == AVERROR_EOF || url_feof(mMovieFile->pb))
@@ -403,28 +499,39 @@ void MediaPlayer::decodeMovie(void* ptr)
 				eof = 1;
 			if (eof) {
 				mCurrentState = MEDIA_PLAYER_PLAYBACK_COMPLETE;
+
+				__android_log_print(ANDROID_LOG_INFO, TAG_SOURCE, "enqueue EOS_PKT");
+				mDecoderVideo->enqueue(&EOS_PKT);
+		        mDecoderAudio->enqueue(&EOS_PKT);
 				notify(MEDIA_PLAYBACK_COMPLETE);
+				break;
 			}
 		}
 
 		if (mJustSeeked) {
-			__android_log_print(ANDROID_LOG_INFO, TAG, "We have JustSeeked!");
+			__android_log_print(ANDROID_LOG_INFO, TAG_SOURCE, "We have JustSeeked!");
 			int64_t fakeNPT = pPacket.pts;
 			if (AV_NOPTS_VALUE == fakeNPT) {
 				fakeNPT = pPacket.dts;
 			}
-			mCurrentPosition = 1000 * fakeNPT * av_q2d(mMovieFile->streams[pPacket.stream_index]->time_base);
-			MediaClock::instance()->setCurClock((double)mCurrentPosition);
+			unsigned long keyTS = 1000 * fakeNPT * av_q2d(mMovieFile->streams[pPacket.stream_index]->time_base);
+			__android_log_print(ANDROID_LOG_INFO, TAG_SOURCE, "set the MediaClock to %ld!", keyTS);
+			MediaClock::instance()->setCurClock(keyTS);
 			mJustSeeked = false;
 			notify(MEDIA_SEEK_COMPLETE);
 		}
 
+		long tmppts = 1000 * pPacket.pts * av_q2d(mMovieFile->streams[pPacket.stream_index]->time_base);
+
 		// Is this a packet from the video stream?
 		if (pPacket.stream_index == mVideoStreamIndex) {
 			mDecoderVideo->enqueue(&pPacket);
+			__android_log_print(ANDROID_LOG_INFO, TAG_SOURCE, "read out A video packet: pts(%ld ms)", tmppts);
+
 		}
 		else if (pPacket.stream_index == mAudioStreamIndex) {
 			mDecoderAudio->enqueue(&pPacket);
+			__android_log_print(ANDROID_LOG_INFO, TAG_SOURCE, "read out A audio packet: pts(%ld ms)", tmppts);
 		}
 		else {
 			// Free the packet that was allocated by av_read_frame
@@ -433,22 +540,22 @@ void MediaPlayer::decodeMovie(void* ptr)
 	}
 
 	//waits on end of video thread
-	__android_log_print(ANDROID_LOG_ERROR, TAG, "waiting on video thread");
+	__android_log_print(ANDROID_LOG_ERROR, TAG_SOURCE, "waiting on video thread");
 	int ret = -1;
 	if((ret = mDecoderVideo->wait()) != 0) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Couldn't cancel video thread: %i", ret);
+		__android_log_print(ANDROID_LOG_ERROR, TAG_SOURCE, "Couldn't cancel video thread: %i", ret);
 	}
 
 	__android_log_print(ANDROID_LOG_ERROR, TAG, "waiting on audio thread");
 	if((ret = mDecoderAudio->wait()) != 0) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Couldn't cancel audio thread: %i", ret);
+		__android_log_print(ANDROID_LOG_ERROR, TAG_SOURCE, "Couldn't cancel audio thread: %i", ret);
 	}
 
 	if(mCurrentState == MEDIA_PLAYER_STATE_ERROR) {
-		__android_log_print(ANDROID_LOG_INFO, TAG, "playing err");
+		__android_log_print(ANDROID_LOG_INFO, TAG_SOURCE, "playing err");
 	}
 	mCurrentState = MEDIA_PLAYER_PLAYBACK_COMPLETE;
-	__android_log_print(ANDROID_LOG_INFO, TAG, "end of playing");
+	__android_log_print(ANDROID_LOG_INFO, TAG_SOURCE, "end of playing");
 }
 
 void* MediaPlayer::startPlayer(void* ptr)
@@ -481,6 +588,7 @@ status_t MediaPlayer::pause()
 	pthread_mutex_lock(&mLock);
 	__android_log_print(ANDROID_LOG_INFO, TAG, "setting the status of MediaPlayer to %d", mCurrentState);
 	mCurrentState = MEDIA_PLAYER_PAUSED;
+	MediaClock::instance()->setCurClockStatus(MediaClock::CLOCK_PAUSED);
 	pthread_mutex_unlock(&mLock);
 	return NO_ERROR;
 }
@@ -527,67 +635,6 @@ status_t MediaPlayer::getDuration(int *msec)
 	}
 	*msec = mDuration;
        return NO_ERROR;
-}
-
-status_t MediaPlayer::seekTo_l(int msec) {
-	__android_log_print(ANDROID_LOG_INFO, TAG, "seekTo_l %d", msec);
-	int ret;
-        if (mMovieFile->start_time != AV_NOPTS_VALUE)
-            msec += mMovieFile->start_time;
-
-        msec = msec * AV_TIME_BASE / 1000 ;
-    	__android_log_print(ANDROID_LOG_INFO, TAG, "The final seek ts:%d", msec);
-
-        ret = avformat_seek_file(mMovieFile, -1, INT64_MIN, msec, INT64_MAX, 0);
-
-    	__android_log_print(ANDROID_LOG_INFO, TAG, "The ret of avformat_seek_file (%d)", ret);
-
-        if (ret < 0) {
-            __android_log_print(ANDROID_LOG_INFO, TAG, "could not seek to position %0.3f\n",
-                    (double)msec);
-            return UNKNOWN_ERROR;
-        }
-
-    	__android_log_print(ANDROID_LOG_INFO, TAG, "Ready to flush Video queque");
-
-        mDecoderVideo->flushDataQueue();
-    	__android_log_print(ANDROID_LOG_INFO, TAG, "Finished flush Video queque");
-
-    	__android_log_print(ANDROID_LOG_INFO, TAG, "Ready to flush Audio queque");
-
-        mDecoderAudio->flushDataQueue();
-    	__android_log_print(ANDROID_LOG_INFO, TAG, "Finished flush Audio queque");
-
-        mJustSeeked = true;
-       return NO_ERROR;
-}
-
-status_t MediaPlayer::seekTo(int msec)
-{
-	__android_log_print(ANDROID_LOG_INFO, TAG, "seekTo %d", msec);
-    if ((sPlayer != 0) && ( mCurrentState & ( MEDIA_PLAYER_STARTED | MEDIA_PLAYER_PREPARED | MEDIA_PLAYER_PAUSED |  MEDIA_PLAYER_PLAYBACK_COMPLETE) ) ) {
-        if ( msec < 0 ) {
-            __android_log_print(ANDROID_LOG_INFO, TAG, "Attempt to seek to invalid position: %d", msec);
-            msec = 0;
-        } else if ((mDuration > 0) && (msec > mDuration)) {
-            __android_log_print(ANDROID_LOG_INFO, TAG, "Attempt to seek to past end of file: request = %d, EOF = %d", msec, mDuration);
-            msec = mDuration;
-        }
-        // cache duration
-        mCurrentPosition = msec;
-        if (mSeekPosition < 0) {
-            mSeekPosition = msec;
-            //return sPlayer->seekTo_l(msec);
-        	__android_log_print(ANDROID_LOG_INFO, TAG, "setting mNeedToSeek to true!");
-            mNeedToSeek = true;
-            return NO_ERROR;
-        }
-        else {
-            __android_log_print(ANDROID_LOG_INFO, TAG, "Seek in progress - queue up seekTo[%d]", msec);
-            return NO_ERROR;
-        }
-    }
-    return INVALID_OPERATION;
 }
 
 status_t MediaPlayer::reset()
@@ -704,8 +751,13 @@ void MediaPlayer::notify(int msg, int ext1, int ext2)
     case MEDIA_SEEK_COMPLETE:
         __android_log_print(ANDROID_LOG_INFO, TAG, "Received seek complete");
         {
-			int drift = abs(mSeekPosition - mCurrentPosition);
-			if (drift > 2000) {
+        	/*
+			float drift = abs(mSeekPosition - mCurrentPosition) / mDuration;
+			__android_log_print(
+					ANDROID_LOG_INFO,
+					TAG,
+					"last seek drift:%f", drift);
+			if (drift > 0.5) {
 				__android_log_print(ANDROID_LOG_INFO, TAG,
 						"Executing queued seekTo(%d) drift(%d)", mSeekPosition,
 						drift);
@@ -717,7 +769,9 @@ void MediaPlayer::notify(int msg, int ext1, int ext2)
 						"All seeks complete - return to regularly scheduled program");
 				mCurrentPosition = mSeekPosition = -1;
 			}
+			*/
 		}
+		mCurrentPosition = mSeekPosition = -1;
         break;
     case MEDIA_BUFFERING_UPDATE:
         __android_log_print(ANDROID_LOG_INFO, TAG, "buffering %d", ext1);
@@ -736,6 +790,8 @@ void MediaPlayer::notify(int msg, int ext1, int ext2)
        //__android_log_print(ANDROID_LOG_INFO, TAG, "callback application");
     	/*Debug!!!*/
     	//return;
+        __android_log_print(ANDROID_LOG_INFO, TAG, "send the msg:%d to our listener", msg);
+
        mListener->notify(msg, ext1, ext2);
        //__android_log_print(ANDROID_LOG_INFO, TAG, "back from callback");
     }

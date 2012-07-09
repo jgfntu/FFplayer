@@ -2,7 +2,6 @@
 #include "decoder_video.h"
 #include <unistd.h>
 #include "mediaclock.h"
-
 #define TAG "FFMpegVideoDecoder"
 
 static uint64_t global_video_pkt_pts = AV_NOPTS_VALUE;
@@ -27,88 +26,104 @@ bool DecoderVideo::prepare()
 }
 
 /* pts is in the unit of second */
-double DecoderVideo::synchronize(AVFrame *src_frame, double pts) {
-
-	double frame_delay;
-
-	if (pts != 0) {
-		/* if we have pts, set video clock to it */
-		mVideoClock = pts;
-	} else {
-		/* if we aren't given a pts, set it to the clock */
-		pts = mVideoClock;
-	}
-	/* update the video clock */
-	frame_delay = av_q2d(mStream->codec->time_base);
-	/* if we are repeating a frame, adjust clock accordingly */
-	frame_delay += src_frame->repeat_pict * (frame_delay * 0.5);
-	mVideoClock += frame_delay;
+double DecoderVideo::synchronize(AVFrame *src_frame, unsigned long pts) {
 	/* sync to MediaClock */
-	double diffUsecs = (mVideoClock * 1000 - (MediaClock::instance())->getCurClock() - 2 * MediaClock::RENDER_DELAY) * 1000;
-	unsigned long  diff = diffUsecs;
+	unsigned long  diff = pts - (MediaClock::instance())->getCurClock();
+	__android_log_print(ANDROID_LOG_INFO, TAG, "Video Decoder Thread synchronize() pts:%ld, MediaClock:%ld!", (long)pts, (long)MediaClock::instance()->getCurClock());
 
-	if (diffUsecs > 0.0) {
-		if (diff < 1000000) {
-			usleep(diff);
-		}else {
-			sleep((unsigned int)(diffUsecs / 1000000));
-		}
+	__android_log_print(ANDROID_LOG_INFO, TAG, "Video Decoder Thread sync diff:%ld ms!", diff);
+
+
+	if (0 < diff && diff < 100000) {
+		usleep(diff - MediaClock::RENDER_DELAY * 1000 * 0.5);
 	}
+
+
 
 	return pts;
 }
 
 bool DecoderVideo::process(AVPacket *packet)
 {
+	/* Process some special Events
+	 * 1) BOS
+	 * 2) EOS
+	 */
+	if (&BOS_PKT == packet) {
+		__android_log_print(ANDROID_LOG_INFO, TAG, "Video Decoder Received BOS PKT!");
+		return true;
+	}else if (&EOS_PKT == packet) {
+		__android_log_print(ANDROID_LOG_INFO, TAG, "Video Decoder Received EOS PKT!");
+		return false;
+	}
+
     int got_picture;
-    int pts = 0;
+    unsigned long pts = 0;
 
 	// Decode video frame
+    if (packet->size == 0 || NULL == packet->data)
+    {
+    	return true;
+    }
+
 	avcodec_decode_video2(mStream->codec,
 						 mFrame,
 						 &got_picture,
 						 packet);
-
-	if (packet->dts == AV_NOPTS_VALUE && mFrame->opaque
-			&& *(uint64_t*) mFrame->opaque != AV_NOPTS_VALUE) {
-		pts = *(uint64_t *) mFrame->opaque;
+	if (packet->pts != AV_NOPTS_VALUE) {
+		pts = packet->pts;
 	} else if (packet->dts != AV_NOPTS_VALUE) {
 		pts = packet->dts;
+	} else if (packet->dts == AV_NOPTS_VALUE && mFrame->opaque
+			&& *(uint64_t*) mFrame->opaque != AV_NOPTS_VALUE) {
+		pts = *(uint64_t *) mFrame->opaque;
 	} else {
 		pts = 0;
 	}
-	pts *= av_q2d(mStream->time_base);
+
+	pts = 1000 * pts * av_q2d(mStream->time_base);
+
 
 	if (got_picture) {
 		pts = synchronize(mFrame, pts);
 
 		onDecode(mFrame, pts);
-
+		__android_log_print(ANDROID_LOG_INFO, TAG, "Video Decoder Thread Processing!");
 		return true;
 	}
+
+	__android_log_print(ANDROID_LOG_INFO, TAG, "Video Decoder Thread Decoding error ret:%d, pkt:(data %p size:%d)!",
+			got_picture, packet->data, packet->size);
+    // Free the packet that was allocated by av_read_frame
+    av_free_packet(packet);
 	return false;
 }
 
 bool DecoderVideo::decode(void* ptr)
 {
-	AVPacket        pPacket;
+	MediaClock::instance()->waitOnClock();
 
+	AVPacket        pPacket;
 	__android_log_print(ANDROID_LOG_INFO, TAG, "decoding video");
 
     while(mRunning)
     {
+        __android_log_print(ANDROID_LOG_INFO, TAG, "Video Queue get start()");
         if(mQueue->get(&pPacket, true) < 0)
         {
+            __android_log_print(ANDROID_LOG_INFO, TAG, "getVideo Packet error, thread exit!");
             mRunning = false;
             return false;
         }
+        __android_log_print(ANDROID_LOG_INFO, TAG, "Video Queue get end()");
         if(!process(&pPacket))
         {
+            __android_log_print(ANDROID_LOG_INFO, TAG, "Video process error, thread exit!");
+
             mRunning = false;
             return false;
         }
-        // Free the packet that was allocated by av_read_frame
-        av_free_packet(&pPacket);
+
     }
 
     __android_log_print(ANDROID_LOG_INFO, TAG, "decoding video ended");

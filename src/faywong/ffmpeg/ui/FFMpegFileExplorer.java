@@ -27,7 +27,12 @@ public class FFMpegFileExplorer extends ListActivity {
 
 	private static final String TAG = "FFMpegFileExplorer";
 
-	private String mRoot = "/sdcard";
+	private String[] mRoot = {
+			"/sdcard",
+			"/extsdcard",
+	};
+
+	private int curDirectoryInx = 0;
 	private TextView mTextViewLocation;
 	private File[] mFiles;
 	private EditText mUrlEditText;
@@ -39,7 +44,7 @@ public class FFMpegFileExplorer extends ListActivity {
 
 		setContentView(R.layout.ffmpeg_file_explorer);
 		mTextViewLocation = (TextView) findViewById(R.id.textview_path);
-		getDirectory(mRoot);
+		getDirectory(mRoot[curDirectoryInx]);
 		mUrlEditText = (EditText) findViewById(R.id.NetURL);
 		Button playBtn = (Button) findViewById(R.id.startBtn);
 		playBtn.setOnClickListener(new OnClickListener() {
@@ -57,7 +62,7 @@ public class FFMpegFileExplorer extends ListActivity {
 					if (DEBUG) {
 						Log.e(TAG, "The input URL is " + editContent);
 					}
-					
+
 					InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 					imm.hideSoftInputFromWindow(mUrlEditText.getWindowToken(),
 							0);
@@ -89,6 +94,7 @@ public class FFMpegFileExplorer extends ListActivity {
 
 	private void getDirectory(String dirPath) {
 		try {
+			curDirectoryInx++;
 			mTextViewLocation.setText("Location: " + dirPath);
 
 			File f = new File(dirPath);
@@ -109,7 +115,10 @@ public class FFMpegFileExplorer extends ListActivity {
 			setListAdapter(new FileExplorerAdapter(this, files,
 					temp.length == files.length));
 		} catch (Exception ex) {
-			FFMpegMessageBox.show(this, "Error", ex.getMessage());
+			if (curDirectoryInx < mRoot.length) {
+				getDirectory(mRoot[curDirectoryInx]);
+			}
+			//FFMpegMessageBox.show(this, "Error", ex.getMessage());
 		}
 	}
 

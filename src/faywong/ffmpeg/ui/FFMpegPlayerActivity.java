@@ -16,15 +16,16 @@ import android.util.Log;
 public class FFMpegPlayerActivity extends Activity {
 	private static final String 	TAG = "FFMpegPlayerActivity";
 	//private static final String 	LICENSE = "This software uses libraries from the FFmpeg project under the LGPLv2.1";
-	
+
 	private FFMpegMovieViewAndroid 	mMovieView;
 	//private WakeLock				mWakeLock;
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+
 		Intent i = getIntent();
+		Log.d(TAG, "The intent: " + i + " data:" + i.getData());
 		String filePath = i.getStringExtra(getResources().getString(R.string.input_file));
 		if(filePath == null) {
 			Log.d(TAG, "Not specified video file");
@@ -70,6 +71,20 @@ public class FFMpegPlayerActivity extends Activity {
 		super.onDestroy();
 		FFMpegMessageBox.reCycle();
 	}
-	
-	
+
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		Log.d(TAG, "onResume() called");
+		super.onResume();
+	}
+
+	@Override
+	protected void onStop() {
+		// TODO Auto-generated method stub
+		Log.d(TAG, "onStop() called");
+		super.onStop();
+	}
+
+
 }

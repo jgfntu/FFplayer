@@ -12,6 +12,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.MediaController;
 import android.widget.MediaController.MediaPlayerControl;
+import com.media.ffmpeg.FFMpegPlayer.OnCompletionListener;
 
 public class FFMpegMovieViewAndroid extends SurfaceView {
 	private static final String 	TAG = "FFMpegMovieViewAndroid";
@@ -36,6 +37,18 @@ public class FFMpegMovieViewAndroid extends SurfaceView {
 
     private void initVideoView() {
     	mPlayer = new FFMpegPlayer();
+    	/*set some callbacks to mPlayer*/
+    	OnCompletionListener listener = new OnCompletionListener() {
+
+			@Override
+			public void onCompletion(FFMpegPlayer mp) {
+				// TODO Auto-generated method stub
+				Log.e(TAG, "xxx Playback End!");
+			}
+
+    	};
+    	mPlayer.setOnCompletionListener(listener);
+
     	SurfaceHolder surfHolder = getHolder();
     	surfHolder.addCallback(mSHCallback);
     }

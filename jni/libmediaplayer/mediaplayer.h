@@ -10,7 +10,7 @@
 #include "decoder_audio.h"
 #include "decoder_video.h"
 
-#define FFMPEG_PLAYER_MAX_QUEUE_SIZE 5
+#define FFMPEG_PLAYER_MAX_QUEUE_SIZE 10
 
 using namespace android;
 
@@ -157,6 +157,8 @@ private:
 	static void 				decode(int16_t* buffer, int buffer_size);
 
 	void						decodeMovie(void* ptr);
+	void 						clear_l();
+
 
 	double 						mTime;
 	pthread_mutex_t             mLock;

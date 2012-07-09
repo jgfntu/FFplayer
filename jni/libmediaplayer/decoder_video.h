@@ -10,7 +10,6 @@ class DecoderVideo : public IDecoder
 public:
     DecoderVideo(AVStream* stream);
     ~DecoderVideo();
-
     VideoDecodingHandler		onDecode;
 
 private:
@@ -18,7 +17,7 @@ private:
 	double						mVideoClock;
 
     bool                        prepare();
-    double 						synchronize(AVFrame *src_frame, double pts);
+    double 						synchronize(AVFrame *src_frame, unsigned long pts);
     bool                        decode(void* ptr);
     bool                        process(AVPacket *packet);
     static int					getBuffer(struct AVCodecContext *c, AVFrame *pic);

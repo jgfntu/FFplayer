@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.media.AudioManager;
+import com.media.ffmpeg.android.OnCompletionListener;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -69,10 +70,10 @@ public class FFMpegPlayer
      * @see android.media.MediaPlayer.OnInfoListener
      */
     public static final int MEDIA_INFO_METADATA_UPDATE = 802;
-    
+
     public static final int MEDIA_INFO_FRAMERATE_VIDEO = 900;
     public static final int MEDIA_INFO_FRAMERATE_AUDIO = 901;
-    
+
     private final static String 		TAG = "MediaPlayer";
 
     private int 						mNativeContext; // accessed by native methods
@@ -127,11 +128,11 @@ public class FFMpegPlayer
      * Register a callback to be invoked when the end of a media source
      * has been reached during playback.
      *
-     * @param listener the callback that will be run
+     * @param onCompletionListener the callback that will be run
      */
-    public void setOnCompletionListener(OnCompletionListener listener)
+    public void setOnCompletionListener(OnCompletionListener onCompletionListener)
     {
-        mOnCompletionListener = listener;
+        mOnCompletionListener = onCompletionListener;
     }
 
     private OnCompletionListener mOnCompletionListener;
@@ -298,7 +299,7 @@ public class FFMpegPlayer
 
     private OnInfoListener mOnInfoListener;
 
-    
+
     private class EventHandler extends Handler
     {
         private FFMpegPlayer mMediaPlayer;
@@ -374,7 +375,7 @@ public class FFMpegPlayer
             }
         }
     }
-    
+
     private EventHandler mEventHandler;
 
     static {
@@ -407,14 +408,14 @@ public class FFMpegPlayer
     		break;
     	}
     }
-    
+
     /**
      * Sets the SurfaceHolder to use for displaying the video portion of the media.
      * This call is optional. Not calling it when playing back a video will
      * result in only the audio track being played.
      *
      * @param sh the SurfaceHolder to use for video display
-     * @throws IOException 
+     * @throws IOException
      */
 	public void setDisplay(SurfaceHolder sh) throws IOException {
 		mSurfaceHolder = sh;
@@ -542,7 +543,7 @@ public class FFMpegPlayer
      * Update the MediaPlayer ISurface. Call after updating mSurface.
      */
     private native void _setVideoSurface(Surface surface) throws IOException;
-    
+
     /**
      * Sets the data source (file-path or http/rtsp URL) to use.
      *
@@ -563,11 +564,11 @@ public class FFMpegPlayer
     public native void prepare() throws IOException, IllegalStateException;
 
     private native void _start() throws IllegalStateException;
-    
+
     private native void _stop() throws IllegalStateException;
-    
+
     private native void _pause() throws IllegalStateException;
-    
+
     /**
      * Returns the width of the video.
      *
@@ -619,11 +620,11 @@ public class FFMpegPlayer
      * @return the duration in milliseconds
      */
     public native int getDuration();
-    
+
     private native void _release();
-    
+
     private native void _reset();
-    
+
     /**
      * @hide
      */
@@ -640,7 +641,7 @@ public class FFMpegPlayer
      */
     public native void setAudioStreamType(int streamtype);
 
-    
+
 
     private static native final void native_init() throws RuntimeException;
     private native final void native_setup(Object mediaplayer_this);
@@ -707,13 +708,13 @@ public class FFMpegPlayer
             stayAwake(true);
         }
 		*/
-        
+
         return true;
     }
 
     @Override
     protected void finalize() { native_finalize(); }
-    
+
     public interface IFFMpegPlayer {
     	public void onPlay();
     	public void onStop();

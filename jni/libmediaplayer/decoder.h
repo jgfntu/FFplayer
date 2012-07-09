@@ -7,6 +7,8 @@ extern "C" {
 #include "libavformat/avformat.h"
 #include "libavutil/avutil.h"
 }
+extern AVPacket BOS_PKT;
+extern AVPacket EOS_PKT;
 #include "thread.h"
 #include "packetqueue.h"
 
@@ -14,7 +16,7 @@ class IDecoder : public Thread
 {
 public:
 	IDecoder(AVStream* stream);
-	~IDecoder();
+	virtual ~IDecoder();
 	void flushDataQueue();
     void						stop();
 	void						enqueue(AVPacket* packet);

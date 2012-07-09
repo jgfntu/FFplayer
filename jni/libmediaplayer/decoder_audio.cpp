@@ -11,6 +11,7 @@ DecoderAudio::DecoderAudio(AVStream* stream) : IDecoder(stream)
 
 DecoderAudio::~DecoderAudio()
 {
+    MediaClock::destroy();
 }
 
 bool DecoderAudio::prepare()
@@ -21,13 +22,26 @@ bool DecoderAudio::prepare()
     if(mSamples == NULL) {
     	return false;
     }
-    //(MediaClock::instance())->setCurClock(1000.0 * mStream->start_time * av_q2d(mStream->time_base));
     MediaClock::instance();
     return true;
 }
 
 bool DecoderAudio::process(AVPacket *packet)
 {
+	/* Process some special Events
+	 * 1) BOS
+	 * 2) EOS
+	 */
+	if (&BOS_PKT == packet) {
+		__android_log_print(ANDROID_LOG_INFO, TAG, "Audio Decoder Received BOS PKT!");
+		/*update our clock*/
+		packet->pts;
+		return true;
+	}else if (&EOS_PKT == packet) {
+		__android_log_print(ANDROID_LOG_INFO, TAG, "Audio Decoder Received EOS PKT!");
+		return false;
+	}
+
     int size = mSamplesSize;
     //for (;;) {
     	//TODO: this packet may not be decompressed completely!
@@ -38,47 +52,45 @@ bool DecoderAudio::process(AVPacket *packet)
 	        return false;
 	    }
 
+		__android_log_print(ANDROID_LOG_INFO, TAG, "Audio Decoder Thread Processing");
+
+
    //}
 
     /* if no pts, then compute it */
     AVCodecContext *dec = mStream->codec;
-    double pts = packet->pts * av_q2d(mStream->time_base) * 1000.0;
-    double timeDelta = 0.0;
-    if (pts != AV_NOPTS_VALUE) {
-	    timeDelta = (pts - (MediaClock::instance())->getCurClock());
-           /* substract the render time diff */
-           double usecsD = (timeDelta - MediaClock::RENDER_DELAY) * 1000;
-           unsigned int usecs = usecsD;
-           if (usecsD > 0.0) {
-	           if (usecs < 1000000) {
-		    	usleep(usecs);
-		    }else {
-		    	sleep((unsigned int)(usecs / 1000000));
-		    }
-	    }
-	    (MediaClock::instance())->setCurClock(pts);
+    unsigned long tsMs = packet->pts * av_q2d(mStream->time_base) * 1000;
+    unsigned long timeDelta = 0;
+    if (packet->pts != AV_NOPTS_VALUE) {
+		timeDelta = (tsMs - (MediaClock::instance())->getCurClock());
+		unsigned long usecs = timeDelta * 1000;
 
-	    onDecode(mSamples, size);
-	    //call handler for posting buffer to os audio driver
-    } else {
-	    timeDelta =  1000.0 * ((double)size /
-	        (dec->channels * dec->sample_rate * bytesPerSample(dec->sample_fmt)));
-	    onDecode(mSamples, size);
+		if (0 < usecs && usecs < 100000) {
+			/* substract the render time diff */
+			usleep(usecs - MediaClock::RENDER_DELAY * 1000 * 0.5);
+		}
+		(MediaClock::instance())->setCurClock(tsMs);
 
-           /* substract the render time diff */
-           double usecsD = (timeDelta - MediaClock::RENDER_DELAY) * 1000;
-           unsigned int usecs = usecsD;
-           if (usecsD > 0.0) {
-	           if (usecs < 1000000) {
-		    	usleep(usecs);
-		    }else {
-		    	sleep((unsigned int)(usecs / 1000000));
-		    }
-	    }
-          if (timeDelta > 0.0) {
-  	    	(MediaClock::instance())->incClockBy(timeDelta);
-          }
-    }
+		onDecode(mSamples, size);
+		//call handler for posting buffer to os audio driver
+	} else {
+		timeDelta = 1000
+				* ((double) size
+						/ (dec->channels * dec->sample_rate
+								* bytesPerSample(dec->sample_fmt)));
+
+		onDecode(mSamples, size);
+		unsigned long usecs = timeDelta * 1000;
+
+		if (0 < usecs && usecs < 100000) {
+			/* substract the render time diff */
+			usleep(usecs - MediaClock::RENDER_DELAY * 1000 * 0.5);
+		}
+
+		if (timeDelta > 0.0) {
+			(MediaClock::instance())->incClockBy(timeDelta);
+		}
+	}
 
 
 
@@ -107,13 +119,20 @@ bool DecoderAudio::decode(void* ptr)
 
     while(mRunning)
     {
+    	MediaClock::instance()->waitOnClock();
+        __android_log_print(ANDROID_LOG_INFO, TAG, "AudioQueue get start()");
         if(mQueue->get(&pPacket, true) < 0)
         {
+            __android_log_print(ANDROID_LOG_INFO, TAG, "getAudio Packet error, thread exit!");
+
             mRunning = false;
             return false;
         }
+        __android_log_print(ANDROID_LOG_INFO, TAG, "AudioQueue get end()");
+
         if(!process(&pPacket))
         {
+            __android_log_print(ANDROID_LOG_INFO, TAG, "Audio process error, thread exit!");
             mRunning = false;
             return false;
         }

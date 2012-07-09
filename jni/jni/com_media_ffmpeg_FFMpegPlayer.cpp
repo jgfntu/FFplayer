@@ -362,7 +362,6 @@ com_media_ffmpeg_FFMpegPlayer_native_setup(JNIEnv *env, jobject thiz, jobject we
     // create new listener and give it to MediaPlayer
     JNIFFmpegMediaPlayerListener* listener = new JNIFFmpegMediaPlayerListener(env, thiz, weak_this);
     mp->setListener(listener);
-
     // Stow our new C++ MediaPlayer in an opaque field in the Java object.
     setMediaPlayer(env, thiz, mp);
 }
@@ -370,14 +369,15 @@ com_media_ffmpeg_FFMpegPlayer_native_setup(JNIEnv *env, jobject thiz, jobject we
 static void
 com_media_ffmpeg_FFMpegPlayer_release(JNIEnv *env, jobject thiz)
 {
-	/*
+    __android_log_print(ANDROID_LOG_INFO, TAG, "com_media_ffmpeg_FFMpegPlayer_release() ");
     MediaPlayer* mp = getMediaPlayer(env, thiz);
     if (mp != NULL) {
         // this prevents native callbacks after the object is released
         mp->setListener(0);
-        mp->disconnect();
+        delete (mp);
+        env->SetIntField(thiz, fields.context, (int)NULL);
     }
-	*/
+
 }
 
 static void

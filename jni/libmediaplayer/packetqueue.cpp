@@ -96,6 +96,8 @@ int PacketQueue::put(AVPacket* pkt)
 /* return < 0 if aborted, 0 if no packet and > 0 if packet.  */
 int PacketQueue::get(AVPacket *pkt, bool block)
 {
+	//__android_log_print(ANDROID_LOG_INFO, TAG, "PacketQueue::get() in");
+
 	AVPacketList *pkt1;
     int ret;
 
@@ -126,13 +128,17 @@ int PacketQueue::get(AVPacket *pkt, bool block)
 		}
 
     }
+
     pthread_mutex_unlock(&mLock);
+
+	//__android_log_print(ANDROID_LOG_INFO, TAG, "PacketQueue::get() out");
     return ret;
 
 }
 
 void PacketQueue::abort()
 {
+	__android_log_print(ANDROID_LOG_INFO, TAG, "PacketQueue::abort() in");
     pthread_mutex_lock(&mLock);
     mAbortRequest = true;
     pthread_cond_signal(&mCondition);
