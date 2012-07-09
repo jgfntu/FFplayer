@@ -32,10 +32,11 @@
 
         <Button
             android:id="@+id/startBtn"
-            android:layout_width="wrap_content"
+            android:layout_width="62dip"
             android:layout_height="fill_parent"
             android:text="@string/startBtnLabel"
-            android:background="@drawable/btn_normal_lblue" />
+            android:background="@drawable/btn_normal_lblue"
+            />
     </LinearLayout>
 
     <TextView

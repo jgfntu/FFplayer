@@ -118,7 +118,9 @@ public class FFMpegFileExplorer extends ListActivity {
 			if (curDirectoryInx < mRoot.length) {
 				getDirectory(mRoot[curDirectoryInx]);
 			}
-			//FFMpegMessageBox.show(this, "Error", ex.getMessage());
+			else {
+				FFMpegMessageBox.show(this, "Error", ex.getMessage());
+			}
 		}
 	}
 
