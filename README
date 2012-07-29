@@ -1,3 +1,13 @@
 This a third-party media player which developed on the ffmpeg native code to support the playback of local/HLS streaming on Android devices
 
-                                                                                 any question, feel free to contact me<philip584521@gmail.com>
+any question, feel free to contact me<philip584521@gmail.com>
+
+some configuration steps need to executed before building:
+1> create a "NDK_Builder" for this project in Eclipse to build the native code automatically
+	In the main tab
+	Location: /bin/bash
+	Working Directory:The directory in which your project source is saved.
+	Arguments:
+	--login -c "source  /etc/profile && cd /work/Project_Windows/FFPlayer &&ndk-build V=1"
+
+	be sure your have added the directory which contain the ndk-build script<download it from http://developer.android.com/tools/sdk/ndk/index.html> into your PATH environment variable
