@@ -82,7 +82,7 @@ jobject AVFormatContext_create(JNIEnv *env, AVFormatContext *fileContext) {
 
 static void AVFormatContext_release(JNIEnv *env, jobject thiz, jint pointer) {
 	AVFormatContext *fileContext = (AVFormatContext *) pointer;
-	__android_log_print(ANDROID_LOG_INFO, TAG,  "releasing FFMpegAVFormatContext"),
+	LOGV("releasing FFMpegAVFormatContext"),
 	free(fileContext);
 }
 

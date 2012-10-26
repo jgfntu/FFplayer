@@ -1,10 +1,9 @@
 /* mediaplayer.cpp
 **
 */
-
-#define TAG "FFMpegPacketQueue"
-
-#include <android/log.h>
+#define DEBUG 1
+#define TAG "PacketQueue"
+#include <common/logwrapper.h>
 #include "packetqueue.h"
 
 PacketQueue::PacketQueue()
@@ -14,7 +13,6 @@ PacketQueue::PacketQueue()
 	mFirst = NULL;
 	mLast = NULL;
 	mNbPackets = 0;;
-    mSize = 0;
     mAbortRequest = false;
 }
 
@@ -27,42 +25,33 @@ PacketQueue::~PacketQueue()
 
 int PacketQueue::size()
 {
-	pthread_mutex_lock(&mLock);
-    int size = mNbPackets;
-    pthread_mutex_unlock(&mLock);
-	return size;
+    return mNbPackets;
 }
 
 void PacketQueue::flush()
 {
 	AVPacketList *pkt, *pkt1;
-	//__android_log_print(ANDROID_LOG_INFO, TAG, "Before flush queque");
-
+	LOGD("Ready to flush packetqueue");
     pthread_mutex_lock(&mLock);
-	//__android_log_print(ANDROID_LOG_INFO, TAG, "in flush queque");
-
     for(pkt = mFirst; pkt != NULL; pkt = pkt1) {
-    	//__android_log_print(ANDROID_LOG_INFO, TAG, "free pkg 1");
-
+    	LOGD("free packet %p", pkt->pkt.data);
 		pkt1 = pkt->next;
         av_free_packet(&pkt->pkt);
         av_freep(&pkt);
-    	//__android_log_print(ANDROID_LOG_INFO, TAG, "free pkg 2");
     }
     mLast = NULL;
     mFirst = NULL;
     mNbPackets = 0;
-    mSize = 0;
-
-	//__android_log_print(ANDROID_LOG_INFO, TAG, "out flush queque");
-
     pthread_mutex_unlock(&mLock);
+    LOGD("packetqueue flushed");
 }
 
 int PacketQueue::put(AVPacket* pkt)
 {
-	AVPacketList *pkt1;
+	if (!pkt)
+		return PacketQueue::PQ_OP_IN_PARA_INVALID;
 
+	AVPacketList *pkt1;
     /* duplicate the packet */
     if (av_dup_packet(pkt) < 0)
         return -1;
@@ -75,8 +64,8 @@ int PacketQueue::put(AVPacket* pkt)
 
     pthread_mutex_lock(&mLock);
 
-    if (!mLast) {
-        mFirst = pkt1;
+    if (!mLast && !mFirst) {
+    	mLast = mFirst = pkt1;
 	}
     else {
         mLast->next = pkt1;
@@ -84,20 +73,16 @@ int PacketQueue::put(AVPacket* pkt)
 
     mLast = pkt1;
     mNbPackets++;
-    mSize += pkt1->pkt.size + sizeof(*pkt1);
 
 	pthread_cond_signal(&mCondition);
     pthread_mutex_unlock(&mLock);
-
-    return 0;
-
+    return PacketQueue::PQ_OP_SUCCESS;
 }
 
 /* return < 0 if aborted, 0 if no packet and > 0 if packet.  */
 int PacketQueue::get(AVPacket *pkt, bool block)
 {
-	//__android_log_print(ANDROID_LOG_INFO, TAG, "PacketQueue::get() in");
-
+	LOGD("PacketQueue::get() in");
 	AVPacketList *pkt1;
     int ret;
 
@@ -105,7 +90,7 @@ int PacketQueue::get(AVPacket *pkt, bool block)
 
     for(;;) {
         if (mAbortRequest) {
-            ret = -1;
+            ret = PacketQueue::PQ_OP_ABORT_REQ;
             break;
         }
 
@@ -115,30 +100,27 @@ int PacketQueue::get(AVPacket *pkt, bool block)
             if (!mFirst)
                 mLast = NULL;
             mNbPackets--;
-            mSize -= pkt1->pkt.size + sizeof(*pkt1);
             *pkt = pkt1->pkt;
             av_free(pkt1);
-            ret = 1;
+            ret = PacketQueue::PQ_OP_SUCCESS;
             break;
         } else if (!block) {
-            ret = 0;
+            ret = PacketQueue::PQ_OP_NO_MORE_PKT;
             break;
         } else {
 			pthread_cond_wait(&mCondition, &mLock);
 		}
-
     }
-
     pthread_mutex_unlock(&mLock);
 
-	//__android_log_print(ANDROID_LOG_INFO, TAG, "PacketQueue::get() out");
+	LOGD("PacketQueue::get() out ret:%d", ret);
     return ret;
 
 }
 
 void PacketQueue::abort()
 {
-	__android_log_print(ANDROID_LOG_INFO, TAG, "PacketQueue::abort() in");
+	LOGD("PacketQueue::abort() in");
     pthread_mutex_lock(&mLock);
     mAbortRequest = true;
     pthread_cond_signal(&mCondition);

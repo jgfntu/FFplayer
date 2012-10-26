@@ -1,16 +1,17 @@
 #ifndef FFMPEG_DECODER_AUDIO_H
 #define FFMPEG_DECODER_AUDIO_H
 
-#include "decoder.h"
-
+#include "IDecoder.h"
+using namespace ffplayer;
 typedef void (*AudioDecodingHandler) (int16_t*,int);
 
 class DecoderAudio : public IDecoder
 {
 public:
     static const int MAX_SKIP_TIME = 5;
-    static int skipTimes;
-    DecoderAudio(AVStream* stream);
+    int skipTimes;
+    DecoderAudio(AVStream* stream, PacketQueue *queue, Thread *loopThread);
+	BuddyType getBuddyType();
 
     ~DecoderAudio();
 

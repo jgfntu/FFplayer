@@ -162,7 +162,7 @@ private:
 
 	double 						mTime;
 	pthread_mutex_t             mLock;
-	pthread_t					mPlayerThread;
+	Thread*					mPlayerThread;
 	PacketQueue*				mVideoQueue;
     //Mutex                       mNotifyLock;
     //Condition                   mSignal;

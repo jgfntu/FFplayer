@@ -44,33 +44,6 @@ extern "C" {
 static MediaPlayer* sPlayer;
 AVPacket BOS_PKT;
 AVPacket EOS_PKT;
-
-
-MediaPlayer::MediaPlayer()
-{
-    mListener = NULL;
-    mCookie = NULL;
-    mDuration = -1;
-    mStreamType = MUSIC;
-    mCurrentPosition = -1;
-    mSeekPosition = -1;
-    mCurrentState = MEDIA_PLAYER_IDLE;
-    mPrepareSync = false;
-    mPrepareStatus = NO_ERROR;
-    mLoop = false;
-    pthread_mutex_init(&mLock, NULL);
-    mLeftVolume = mRightVolume = 1.0;
-    mVideoWidth = mVideoHeight = 0;
-    sPlayer = this;
-    mJustSeeked = false;
-    mNeedToSeek = false;
-
-    av_init_packet(&BOS_PKT);
-    BOS_PKT.data= reinterpret_cast<uint8_t *> (const_cast<char *> ("BOS_PACKET"));
-
-    av_init_packet(&EOS_PKT);
-    EOS_PKT.data= reinterpret_cast<uint8_t *> (const_cast<char *> ("BOS_PACKET"));
-}
 #define DELETE(obj)     \
 	do {                \
 		if (obj) {      \
@@ -78,6 +51,32 @@ MediaPlayer::MediaPlayer()
 			obj = NULL; \
 		}               \
 	} while (0);
+
+MediaPlayer::MediaPlayer():
+		mPlayerThread(NULL),
+		mListener(NULL),
+		mCookie(NULL),
+		mDuration(-1),
+		mStreamType(MUSIC),
+		mCurrentPosition(-1),
+		mSeekPosition(-1),
+		mCurrentState(MEDIA_PLAYER_IDLE),
+		mPrepareSync(false),
+		mPrepareStatus(NO_ERROR),
+	    mLoop(false),
+	    mJustSeeked(false),
+	    mNeedToSeek(false)
+{
+    pthread_mutex_init(&mLock, NULL);
+    mLeftVolume = mRightVolume = 1.0;
+    mVideoWidth = mVideoHeight = 0;
+    sPlayer = this;
+    av_init_packet(&BOS_PKT);
+    BOS_PKT.data= reinterpret_cast<uint8_t *> (const_cast<char *> ("BOS_PACKET"));
+    av_init_packet(&EOS_PKT);
+    EOS_PKT.data= reinterpret_cast<uint8_t *> (const_cast<char *> ("BOS_PACKET"));
+}
+
 
 MediaPlayer::~MediaPlayer()
 {
@@ -97,7 +96,6 @@ void MediaPlayer::clear_l()
     mSeekPosition = -1;
     mVideoWidth = mVideoHeight = 0;
 }
-
 
 status_t MediaPlayer::prepareAudio()
 {
@@ -571,6 +569,7 @@ status_t MediaPlayer::start()
 	if (mCurrentState != MEDIA_PLAYER_PREPARED) {
 		return INVALID_OPERATION;
 	}
+	mPlayerThread =
 	pthread_create(&mPlayerThread, NULL, startPlayer, NULL);
 	return NO_ERROR;
 }
