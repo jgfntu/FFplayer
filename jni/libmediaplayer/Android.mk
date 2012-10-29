@@ -8,15 +8,13 @@ LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/../include
 
 LOCAL_SRC_FILES += \
-    packetqueue.cpp \
+    PacketQueue.cpp \
     output.cpp \
-    mediaplayer.cpp \
-    decoder.cpp \
-    decoder_audio.cpp \
-    decoder_video.cpp \
-    thread.cpp \
-    mediaclock.cpp
-
+    MediaPlayer.cpp \
+    DecoderAudio.cpp \
+    DecoderVideo.cpp \
+    Thread.cpp
+    
 #LOCAL_STATIC_LIBRARIES := libavcodec libavformat libavutil libpostproc libswscale
 
 LOCAL_MODULE := libmediaplayer

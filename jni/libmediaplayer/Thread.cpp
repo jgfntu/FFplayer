@@ -1,11 +1,11 @@
-#include <android/log.h>
+#define LOG_TAG "Thread"
+#include <common/logwrapper.h>
 #include "Thread.h"
 #include <unistd.h>
-#define TAG "FFMpegThread"
-using ffplayer::Runnable;
+#include "BuddyRunnable.h"
 namespace ffplayer {
+int Thread::THREAD_EXIT_STATUS = 0;
 
-Thread::THREAD_EXIT_STATUS = 0;
 Thread::Thread() :
 		mStatus(THREAD_IDEL) {
 	pthread_mutex_init(&mThreadStatusLock, NULL);
@@ -14,14 +14,17 @@ Thread::Thread() :
 	if (mRunnable) {
 		mRunnable->onInitialize();
 	}
-	pthread_create(&mThread, NULL, ThreadWrapper, this);
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	pthread_create(&mThread, &attr, ThreadWrapper, this);
 }
 
 Thread::~Thread() {
 	pthread_mutex_lock(&mRunnableLock);
 	if (mRunnable) {
 		mRunnable->onFinalize();
-		if (mRunnable->getGCFlags() == Runnable::GC_BY_OWNER) {
+		if (mRunnable->getGCFlags() == BuddyRunnable::GC_BY_EXTERNAL) {
 			delete mRunnable;
 			mRunnable = NULL;
 		}
@@ -34,13 +37,16 @@ Thread::~Thread() {
     LOGD("Thread destructor");
 }
 
-int Thread::registerRunnable(Runnable *run) {
+int Thread::registerRunnable(BuddyRunnable *run) {
 	pthread_mutex_lock(&mRunnableLock);
-	if (NULL != mRunnable) {
+	if (mRunnable) {
 		pthread_mutex_unlock(&mRunnableLock);
 		return -1;
-	} else {
+	} else if (BuddyRunnable::INITIATOR == run->getBuddyType()){
+		LOGD("The BuddyRunnable:%p registerred successfully!", run);
 		mRunnable = run;
+	} else {
+		return -1;
 	}
 	pthread_mutex_unlock(&mRunnableLock);
 	return 0;
@@ -48,7 +54,7 @@ int Thread::registerRunnable(Runnable *run) {
 
 void Thread::start() {
 	pthread_mutex_lock(&mThreadStatusLock);
-	mStatus == THREAD_RUNNING;
+	mStatus = THREAD_RUNNING;
 	pthread_cond_signal(&mCondition);
 	pthread_mutex_unlock(&mThreadStatusLock);
 }
@@ -92,12 +98,7 @@ void Thread::threadLoop(void* ptr) {
 		// running case
 		while (THREAD_RUNNING == mStatus) {
 			LOGD("Thread running");
-			mRunnable->run(void *ptr);
-			long timerUS = mRunnable->getTimer();
-			// need to sleep case on every loop
-			if (timerUS > 0) {
-				usleep(timerUS);
-			}
+			mRunnable->run(ptr);
 		}
 
 		// exit thread case
@@ -106,4 +107,5 @@ void Thread::threadLoop(void* ptr) {
 			break;
 		}
 	}
+}
 }

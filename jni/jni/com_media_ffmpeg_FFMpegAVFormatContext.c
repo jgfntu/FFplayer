@@ -1,6 +1,5 @@
-#define TAG "android_media_FFMpegAVFormatContext"
-
-#include <android/log.h>
+#define LOG_TAG "android_media_FFMpegAVFormatContext"
+#include <common/logwrapper.h>
 #include "jniUtils.h"
 #include "methods.h"
 

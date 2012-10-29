@@ -21,7 +21,10 @@
 #include "jniUtils.h"
 #include "methods.h"
 
-#include <mediaplayer.h>
+#include <MediaPlayer.h>
+#if defined(free)
+#undef free
+#endif
 
 struct fields_t {
     jfieldID    context;
@@ -100,6 +103,9 @@ static MediaPlayer* setMediaPlayer(JNIEnv* env, jobject thiz, MediaPlayer* playe
 // application.
 static void process_media_player_call(JNIEnv *env, jobject thiz, status_t opStatus, const char* exception, const char *message)
 {
+#if defined(sprintf)
+#undef sprintf
+#endif
     if (exception == NULL) {  // Don't throw exception. Instead, send an event.
 		/*
         if (opStatus != (status_t) OK) {

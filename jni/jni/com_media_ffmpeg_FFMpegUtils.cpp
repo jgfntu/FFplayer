@@ -1,16 +1,14 @@
-#include <android/log.h>
+#define LOG_TAG "FFMpegUtils"
+#include <common/logwrapper.h>
 #include "jniUtils.h"
 #include "methods.h"
 
 extern "C" {
-
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
 #include "libswscale/swscale.h"
 
 } // end of extern C
-
-#define TAG "FFMpegUtils"
 
 struct fields_t {
 	jfieldID    surface;
@@ -29,6 +27,9 @@ const char *FFMpegUtils_getSignature() {
 }
 
 extern "C" {
+#if defined(sprintf)
+#undef sprintf
+#endif
 
 static void FFMpegUtils_saveFrame(AVFrame *pFrame, int width, int height, int iFrame) {
 	FILE *pFile;
@@ -48,11 +49,11 @@ static void FFMpegUtils_saveFrame(AVFrame *pFrame, int width, int height, int iF
 
 	// Write header
 	fprintf(pFile, "P6\n%d %d\n255\n", width, height);
-	
+
 	// Write pixel data
 	for(y=0; y<height; y++)
 		fwrite(pFrame->data[0]+y*pFrame->linesize[0], 1, width * 2, pFile);
-	
+
 	// Close file
 	fclose(pFile);
 }
@@ -84,7 +85,7 @@ static void FFMpegUtils_print(JNIEnv *env, jobject obj, jint pAVFormatContext) {
 	AVFormatContext *pFormatCtx = (AVFormatContext *) pAVFormatContext;
 	struct SwsContext *img_convert_ctx;
 
-	__android_log_print(ANDROID_LOG_INFO, TAG, "playing");
+	LOGD("playing");
 
 	// Find the first video stream
 	int videoStream = -1;
@@ -192,7 +193,7 @@ static void FFMpegUtils_print(JNIEnv *env, jobject obj, jint pAVFormatContext) {
 	// Close the video file
 	av_close_input_file(pFormatCtx);
 
-	__android_log_print(ANDROID_LOG_INFO, TAG, "end of playing");
+	LOGD("end of playing");
 }
 
 } // end of extern C

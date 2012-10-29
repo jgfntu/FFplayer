@@ -2,9 +2,9 @@
 #define FFMPEG_THREAD_H
 #include "../jni/jniUtils.h"
 #include <pthread.h>
-#include "Runnable.h"
+#include "BuddyRunnable.h"
 #include <common/logwrapper.h>
-using ffplayer::Runnable;
+using namespace ffplayer;
 namespace ffplayer {
 class Thread {
 public:
@@ -19,13 +19,13 @@ public:
 	virtual void start();
 	virtual void stop();
 	virtual void quit();
-	virtual int registerRunnable(Runnable *run);
+	virtual int registerRunnable(BuddyRunnable *run);
 	inline int getStatus() {
 		return mStatus;
 	}
 protected:
 	int mStatus;
-	Runnable* mRunnable;
+	BuddyRunnable* mRunnable;
 
 private:
 	pthread_t mThread;
