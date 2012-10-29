@@ -67,7 +67,8 @@ MediaPlayer::MediaPlayer():
 	    mHasAudio(false),
 	    mHasVideo(false)
 {
-    pthread_mutex_init(&mLock, NULL);
+    pthread_mutex_init(&mQueueCondLock, NULL);
+    pthread_cond_init(&mQueueCond, NULL);
     mLeftVolume = mRightVolume = 1.0;
     mVideoWidth = mVideoHeight = 0;
     sPlayer = this;
@@ -83,9 +84,10 @@ MediaPlayer::~MediaPlayer()
 	if(mListener != NULL) {
 		free(mListener);
 	}
-
 	DELETE(mDecoderVideo);
 	DELETE(mDecoderAudio);
+	pthread_mutex_destroy(&mQueueCondLock);
+	pthread_cond_destroy(&mQueueCond);
 	LOGI("~MediaPlayer() called!");
 }
 
@@ -271,7 +273,10 @@ status_t MediaPlayer::setDataSource(const char *url)
 status_t MediaPlayer::suspend() {
 	LOGD("suspend");
 
+	pthread_mutex_lock(&mQueueCondLock);
 	mCurrentState = MEDIA_PLAYER_STOPPED;
+	pthread_cond_signal(&mQueueCond);
+	pthread_mutex_unlock(&mQueueCondLock);
 	if(mDecoderAudio != NULL) {
 		mDecoderAudio->stop();
 	}
@@ -298,9 +303,7 @@ status_t MediaPlayer::suspend() {
 }
 
 status_t MediaPlayer::resume() {
-	pthread_mutex_lock(&mLock);
 	mCurrentState = MEDIA_PLAYER_STARTED;
-	pthread_mutex_unlock(&mLock);
     return NO_ERROR;
 }
 
@@ -445,6 +448,16 @@ status_t MediaPlayer::seekTo(int msec)
     return INVALID_OPERATION;
 }
 
+// through this may be have some concurrent problem,
+// but it's accurate for media playback need
+void MediaPlayer::onDataChanged(int evt) {
+	if (evt == PacketQueue::Observer::DATA_CONSUMED) {
+		pthread_mutex_lock(&mQueueCondLock);
+		pthread_cond_signal(&mQueueCond);
+		pthread_mutex_unlock(&mQueueCondLock);
+	}
+}
+
 void MediaPlayer::decodeMovie(void* ptr)
 {
 	AVPacket pPacket;
@@ -455,14 +468,22 @@ void MediaPlayer::decodeMovie(void* ptr)
 	mHasAudio = true;
 
 	AVStream* stream_audio = mMovieFile->streams[mAudioStreamIndex];
+	LOGD("before new Thread()!");
 	mDecoderThread = new Thread();
+	LOGD("after new Thread()!");
 
-	mDecoderAudio = new DecoderAudio(stream_audio, mAudioQueue = new PacketQueue(), mDecoderThread);
+	LOGD("before new DecoderAudio()!");
+	mDecoderAudio = new DecoderAudio(stream_audio, mAudioQueue = new PacketQueue(this), mDecoderThread);
+	LOGD("after new DecoderAudio()!");
+
 	mDecoderAudio->rendorHook = render;
 	if (-1 != mVideoStreamIndex) {
 		mHasVideo = true;
+		LOGD("mHasVideo true, continue!");
 		AVStream* stream_video = mMovieFile->streams[mVideoStreamIndex];
-		mDecoderVideo = new DecoderVideo(stream_video, mVideoQueue = new PacketQueue(), NULL);
+		LOGD("before new DecoderVideo()!");
+		mDecoderVideo = new DecoderVideo(stream_video, mVideoQueue = new PacketQueue(this), NULL);
+		LOGD("after new DecoderVideo()!");
 		mDecoderVideo->rendorHook = render;
 		mDecoderAudio->bindBuddy(mDecoderVideo);
 		mDecoderVideo->start();
@@ -472,15 +493,15 @@ void MediaPlayer::decodeMovie(void* ptr)
 	mCurrentState = MEDIA_PLAYER_STARTED;
 	LOGD("playing %ix%i", mVideoWidth, mVideoHeight);
 	int eof = 0;
-
-	while (mCurrentState != MEDIA_PLAYER_DECODED && mCurrentState != MEDIA_PLAYER_STOPPED &&
-		   mCurrentState != MEDIA_PLAYER_STATE_ERROR)
+	while (validStatus())
 	{
-		if (mHasVideo && mVideoQueue && mVideoQueue->size() > FFMPEG_PLAYER_MAX_QUEUE_SIZE &&
-				mHasAudio && mAudioQueue && mAudioQueue->size() > 2 * FFMPEG_PLAYER_MAX_QUEUE_SIZE) {
-			usleep(10000);
-			continue;
+		pthread_mutex_lock(&mQueueCondLock);
+		// when mCurrentState set to stopped, need to quit the Main PlayerThread
+		// so cancel wait operation
+		while ((mCurrentState != MEDIA_PLAYER_STOPPED) && resSufficient()) {
+			pthread_cond_wait(&mQueueCond, &mQueueCondLock);
 		}
+		pthread_mutex_unlock(&mQueueCondLock);
 
 		if (mNeedToSeek) {
 			sPlayer->seekTo_l(mSeekPosition);
@@ -522,12 +543,10 @@ void MediaPlayer::decodeMovie(void* ptr)
 		}
 
 		long tmppts = 1000 * pPacket.pts * av_q2d(mMovieFile->streams[pPacket.stream_index]->time_base);
-
 		// Is this a packet from the video stream?
 		if (pPacket.stream_index == mVideoStreamIndex && mVideoQueue) {
 			mVideoQueue->put(&pPacket);
 			LOGD("read out A video packet: pts(%ld ms)", tmppts);
-
 		}
 		else if (pPacket.stream_index == mAudioStreamIndex && mAudioQueue) {
 			mAudioQueue->put(&pPacket);
@@ -558,18 +577,19 @@ status_t MediaPlayer::start()
 
 status_t MediaPlayer::stop()
 {
-	pthread_mutex_lock(&mLock);
+	pthread_mutex_lock(&mQueueCondLock);
 	mCurrentState = MEDIA_PLAYER_STOPPED;
-	pthread_mutex_unlock(&mLock);
+	pthread_cond_signal(&mQueueCond);
+	pthread_mutex_unlock(&mQueueCondLock);
     return NO_ERROR;
 }
 
 status_t MediaPlayer::pause()
 {
-	pthread_mutex_lock(&mLock);
-	LOGD("setting the status of MediaPlayer to %d", mCurrentState);
+	pthread_mutex_lock(&mQueueCondLock);
 	mCurrentState = MEDIA_PLAYER_PAUSED;
-	pthread_mutex_unlock(&mLock);
+	pthread_cond_signal(&mQueueCond);
+	pthread_mutex_unlock(&mQueueCondLock);
 	return NO_ERROR;
 }
 
@@ -688,7 +708,7 @@ void MediaPlayer::notify(int msg, int ext1, int ext2)
         __android_log_print(ANDROID_LOG_INFO, TAG, "prepared");
         mCurrentState = MEDIA_PLAYER_PREPARED;
         if (mPrepareSync) {
-            __android_log_print(ANDROID_LOG_INFO, TAG, "signal application thread");
+            LOGD("signal application thread");
             mPrepareSync = false;
             mPrepareStatus = NO_ERROR;
             mSignal.signal();

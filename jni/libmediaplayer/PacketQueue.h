@@ -11,6 +11,13 @@ extern "C" {
 namespace ffplayer {
 class PacketQueue {
 public:
+	class Observer {
+	public:
+		enum {
+			DATA_CONSUMED, DATA_INCREASED
+		};
+		virtual void onDataChanged(int evt) = 0;
+	};
 	/**
 	 * packetqueue operation result/status code
 	 */
@@ -30,7 +37,7 @@ public:
 	/**
 	 * constructor and destructor
 	 */
-	PacketQueue();
+	PacketQueue(PacketQueue::Observer *obs);
 	~PacketQueue();
 
 	/**
@@ -56,6 +63,7 @@ private:
 	bool mAbortRequest;
 	pthread_mutex_t mLock;
 	pthread_cond_t mCondition;
+	PacketQueue::Observer *mObserver;
 };
 }
 #endif // __PACKETQUEUE_H

@@ -18,7 +18,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+#if 0
 #include "config.h"
 #include <inttypes.h>
 #include <math.h>
@@ -3185,3 +3185,4 @@ int main(int argc, char **argv)
 
     return 0;
 }
+#endif

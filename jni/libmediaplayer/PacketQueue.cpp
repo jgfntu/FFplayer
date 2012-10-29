@@ -6,14 +6,14 @@
 #include <common/logwrapper.h>
 #include "PacketQueue.h"
 namespace ffplayer {
-PacketQueue::PacketQueue() {
+PacketQueue::PacketQueue(PacketQueue::Observer *obs) {
 	pthread_mutex_init(&mLock, NULL);
 	pthread_cond_init(&mCondition, NULL);
 	mFirst = NULL;
 	mLast = NULL;
 	mNbPackets = 0;
-	;
 	mAbortRequest = false;
+	mObserver = obs;
 }
 
 PacketQueue::~PacketQueue() {
@@ -76,12 +76,11 @@ int PacketQueue::put(AVPacket* pkt) {
 
 /* return < 0 if aborted, 0 if no packet and > 0 if packet.  */
 int PacketQueue::get(AVPacket *pkt, bool block) {
-	LOGD("PacketQueue::get() in");
+	LOGD("PacketQueue::get() in block:%d", block);
 	AVPacketList *pkt1;
 	int ret;
 
 	pthread_mutex_lock(&mLock);
-
 	for (;;) {
 		if (mAbortRequest) {
 			ret = PacketQueue::PQ_OP_ABORT_REQ;
@@ -97,6 +96,9 @@ int PacketQueue::get(AVPacket *pkt, bool block) {
 			*pkt = pkt1->pkt;
 			av_free(pkt1);
 			ret = PacketQueue::PQ_OP_SUCCESS;
+			if (mObserver) {
+				mObserver->onDataChanged(PacketQueue::Observer::DATA_CONSUMED);
+			}
 			break;
 		} else if (!block) {
 			ret = PacketQueue::PQ_OP_NO_MORE_PKT;
@@ -106,10 +108,8 @@ int PacketQueue::get(AVPacket *pkt, bool block) {
 		}
 	}
 	pthread_mutex_unlock(&mLock);
-
 	LOGD("PacketQueue::get() out ret:%d", ret);
 	return ret;
-
 }
 
 void PacketQueue::abort() {

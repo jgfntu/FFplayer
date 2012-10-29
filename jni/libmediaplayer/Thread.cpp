@@ -7,17 +7,18 @@ namespace ffplayer {
 int Thread::THREAD_EXIT_STATUS = 0;
 
 Thread::Thread() :
-		mStatus(THREAD_IDEL) {
+		mStatus(THREAD_IDEL), mRunnable(NULL) {
 	pthread_mutex_init(&mThreadStatusLock, NULL);
 	pthread_mutex_init(&mRunnableLock, NULL);
 	pthread_cond_init(&mCondition, NULL);
-	if (mRunnable) {
-		mRunnable->onInitialize();
-	}
+	LOGD("create Thread step 1");
+
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	LOGD("create Thread step 3");
 	pthread_create(&mThread, &attr, ThreadWrapper, this);
+	LOGD("create Thread step 4");
 }
 
 Thread::~Thread() {
@@ -32,20 +33,23 @@ Thread::~Thread() {
 	pthread_mutex_unlock(&mRunnableLock);
 
 	quit();
-    void* junk;
-    pthread_join(mThread, &junk);
-    LOGD("Thread destructor");
+	LOGD("Thread destructor");
 }
 
 int Thread::registerRunnable(BuddyRunnable *run) {
+	if (!run) {
+		return -1;
+	}
 	pthread_mutex_lock(&mRunnableLock);
 	if (mRunnable) {
 		pthread_mutex_unlock(&mRunnableLock);
 		return -1;
-	} else if (BuddyRunnable::INITIATOR == run->getBuddyType()){
+	} else if (BuddyRunnable::INITIATOR == run->getBuddyType()) {
 		LOGD("The BuddyRunnable:%p registerred successfully!", run);
 		mRunnable = run;
+		mRunnable->onInitialize();
 	} else {
+		pthread_mutex_unlock(&mRunnableLock);
 		return -1;
 	}
 	pthread_mutex_unlock(&mRunnableLock);
@@ -75,7 +79,7 @@ void* Thread::ThreadWrapper(void* ptr) {
 	detachCurrentThread();
 	LOGD("thread exit");
 	THREAD_EXIT_STATUS = 0;
-	pthread_exit((void*)&THREAD_EXIT_STATUS);
+	pthread_exit((void*) &THREAD_EXIT_STATUS);
 }
 
 void Thread::quit() {

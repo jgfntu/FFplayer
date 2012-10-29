@@ -19,7 +19,7 @@ namespace ffplayer {
 DecoderVideo::DecoderVideo(AVStream* stream, PacketQueue *queue,
 		Thread *loopThread) :
 		mStream(stream), mQueue(queue), mLoopThread(loopThread), mVideoClock(
-				0.0) {
+				0.0), mFrame(NULL) {
 	mStream->codec->get_buffer = getBuffer;
 	mStream->codec->release_buffer = releaseBuffer;
 }
@@ -34,6 +34,10 @@ void DecoderVideo::onInitialize() {
 }
 
 void DecoderVideo::onFinalize() {
+	if (mFrame) {
+		av_free(mFrame);
+		mFrame = NULL;
+	}
 	return;
 }
 
@@ -43,12 +47,12 @@ BuddyRunnable::BuddyType DecoderVideo::getBuddyType() {
 
 int DecoderVideo::onBuddyEvent(BuddyRunnable *buddy, BuddyEvent evt) {
 	ISSUE_FUNCTION_IN();
-	LOGD("Event type:%d", evt.type);
+	LOGD("DecoderVideo::onBuddyEvent() Event type:%d", evt.type);
 	switch (evt.type) {
 	case AV_SYNC:
 	{
 		double sysClock = evt.data.dData;
-		LOGD("Event type:%f", sysClock);
+		LOGD("sysClock:%f", sysClock);
 		decodeRender(sysClock);
 	}
 		break;
@@ -57,6 +61,7 @@ int DecoderVideo::onBuddyEvent(BuddyRunnable *buddy, BuddyEvent evt) {
 		break;
 	}
 }
+
 int DecoderVideo::bindBuddy(BuddyRunnable *buddy) {
 	if (mBuddy) {
 		return -1;
@@ -97,9 +102,10 @@ int DecoderVideo::synchronize(AVFrame *srcFrame, double pts, double clock) {
 
 	double delay, sync_threshold, diff;
 	delay = av_q2d(mStream->codec->time_base);
+	LOGD("original delay:%lf", delay);
 	delay += srcFrame->repeat_pict * (delay * 0.5);
 	mVideoClock += delay;
-	LOGD("mVideoClock:%f", mVideoClock);
+	LOGD("mVideoClock:%f, pts:%lf, delay:%lf", mVideoClock, pts, delay);
 
 	/* compute nominal delay */
 //	delay = pts - mLastPts;
@@ -111,6 +117,7 @@ int DecoderVideo::synchronize(AVFrame *srcFrame, double pts, double clock) {
 //	}
 //	mLastPts = pts;
 	diff = pts - clock;
+	LOGD("diff:%f", diff);
 	sync_threshold = FFMAX(AV_SYNC_THRESHOLD, delay);
 	if (fabs(diff) < AV_NOSYNC_THRESHOLD) {
 		if (diff <= -sync_threshold)
@@ -119,7 +126,7 @@ int DecoderVideo::synchronize(AVFrame *srcFrame, double pts, double clock) {
 			delay = 1.5 * delay;
 	}
 
-	LOGD("Video Decoder Thread sync diff:%f ms!", diff);
+	LOGD("Video Decoder Thread sync diff:%fs, delay:%lldus!", diff, delay * 1e6);
 
 	if (delay > 0.0) {
 		usleep(delay * 1e6);
@@ -130,11 +137,12 @@ int DecoderVideo::synchronize(AVFrame *srcFrame, double pts, double clock) {
 int DecoderVideo::decodeRender(double clock) {
 	AVPacket pkt, *pPacket = &pkt;
 	LOGD("Video Queue get start()");
-	if (mQueue->get(&pkt, true) < 0) {
+	if (mQueue->get(&pkt, true) != PacketQueue::PQ_OP_SUCCESS) {
 		LOGD("getVideo Packet error!");
 		return -1;
-	}LOGD("Video Queue get passed()");
+	}
 	global_video_pkt_pts = pkt.pts;
+	LOGD("global_video_pkt_pts:%lld", global_video_pkt_pts);
 
 	/* Process some special Events
 	 * 1) BOS
@@ -171,19 +179,21 @@ int DecoderVideo::decodeRender(double clock) {
 		}
 
 		double videoTs = pts * av_q2d(mStream->time_base);
-
+		LOGD("Video Decoder Thread videoTs:%f!", videoTs);
 		pts = synchronize(mFrame, videoTs, clock);
 		rendorHook(mFrame);
-		LOGD("Video Decoder Thread Processing!");
+		LOGD("Video rendor finish!!");
 	}
 
-	LOGD("Video Decoder Thread Decoding error ret:%d, pkt:(data %p size:%d)!", got_picture, pPacket->data, pPacket->size);
+	LOGD("Video Decoder Thread Decoding ret:%d, pkt:(data %p size:%d)!", got_picture, pPacket->data, pPacket->size);
 	// Free the packet that was allocated by av_read_frame
 	av_free_packet(pPacket);
-
-	LOGD("decoding video ended");
+	LOGD("Ready to free AVFrame");
 	// Free the RGB image
-	av_free(mFrame);
+//	for (int i = 0; i < 3; i++) {
+//		av_freep(&mFrame->data[i]);
+//	}
+	LOGD("AVFrame freed!");
 	return 0;
 }
 

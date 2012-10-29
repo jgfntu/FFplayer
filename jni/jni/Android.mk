@@ -116,7 +116,6 @@ endif
 ifeq ($(WITH_PLAYER),true)
 LOCAL_SRC_FILES += \
     com_media_ffmpeg_FFMpegPlayer.cpp
-#com_media_ffmpeg_android_FFMpegPlayerAndroid.cpp
 endif
 
 ifeq ($(IN_NDK),true)	
@@ -132,7 +131,7 @@ LOCAL_STATIC_LIBRARIES := libmediaplayer
 LOCAL_MODULE := libffmpeg_jni9
 include $(BUILD_SHARED_LIBRARY)
 
-#Another libffmpeg_jni.so version(for ICS OS)
+# Another libffmpeg_jni.so version(for ICS OS)
 include $(CLEAR_VARS)
 
 IN_NDK := true

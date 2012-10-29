@@ -37,7 +37,7 @@ public:
 	virtual int start();
 private:
 
-	long mTimer;
+	double mTimer;
 	int16_t* mSamples;
 	int mSamplesSize;
 	BuddyRunnable *mBuddy;
@@ -48,7 +48,7 @@ private:
 	double mLastClock;
 	int64_t mLastAbsTime;
 	inline int bytesPerSample(enum SampleFormat sample_fmt);
-	int decodeRender(AVPacket *packet);
+	int decodeRender();
 	int64_t now(void);
 };
 }

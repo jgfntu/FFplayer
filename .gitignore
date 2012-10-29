@@ -2,6 +2,7 @@
 *.O
 *.o.d
 *.s
+*.so
 *.class
 *.apk
 *.dex

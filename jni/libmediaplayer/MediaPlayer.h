@@ -115,7 +115,7 @@ public:
     virtual void notify(int msg, int ext1, int ext2) = 0;
 };
 
-class MediaPlayer
+class MediaPlayer : public PacketQueue::Observer
 {
 public:
     MediaPlayer();
@@ -146,7 +146,18 @@ public:
 	status_t        suspend();
 	status_t        resume();
 
+	// implement PacketQueue::Observer
+	void onDataChanged(int evt);
+
 private:
+	inline bool validStatus() {
+		return (mCurrentState != MEDIA_PLAYER_DECODED && mCurrentState != MEDIA_PLAYER_STOPPED &&
+				   mCurrentState != MEDIA_PLAYER_STATE_ERROR);
+	}
+	inline bool resSufficient() {
+		return (mHasVideo ? mVideoQueue && mVideoQueue->size() > FFMPEG_PLAYER_MAX_QUEUE_SIZE : true ) &&
+						(mHasAudio ? mAudioQueue && mAudioQueue->size() > 2 * FFMPEG_PLAYER_MAX_QUEUE_SIZE : true);
+	}
 	status_t					prepareAudio();
 	status_t					prepareVideo();
 	bool						shouldCancel(PacketQueue* queue);
@@ -161,7 +172,8 @@ private:
 
 
 	double 						mTime;
-	pthread_mutex_t             mLock;
+	pthread_mutex_t             mQueueCondLock;
+	pthread_cond_t              mQueueCond;
 	pthread_t					mMainThread;
 	Thread* 					mDecoderThread;
 	PacketQueue*				mVideoQueue;
