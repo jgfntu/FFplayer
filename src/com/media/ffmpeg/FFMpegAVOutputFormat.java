@@ -1,5 +1,3 @@
 package com.media.ffmpeg;
 
-public class FFMpegAVOutputFormat {
-
-}
+public class FFMpegAVOutputFormat {}

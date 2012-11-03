@@ -1,6 +1,9 @@
+
 #ifndef __UTILS_H
 #define __UTILS_H
+
 #include <android/log.h>
+
 #define min(a, b) (((a) > (b)) ? (b) : (a))
 //helper macro to issue a function is invoked
 #define ISSUE_FUNCTION_IN() \
@@ -35,3 +38,6 @@
         } \
     } while (0)
 #endif// __UTILS_H
+
+
+//~ Formatted by Jindent --- http://www.jindent.com

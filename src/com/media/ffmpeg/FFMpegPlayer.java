@@ -8,7 +8,6 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.media.AudioManager;
-import com.media.ffmpeg.android.OnCompletionListener;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;

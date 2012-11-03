@@ -1,78 +1,76 @@
 package com.media.ffmpeg;
 
 public class FFMpegAVCodecContext {
-	
-	private long 						mPointer;
-	private FFMpegAVClass 				mAVClass;
-	private int 						mBitRate;
-	private int 						mBitRateTolerance; 
-	private int 						mFlags;
- 	
-	private int 						mSubId; 
-	private int 						mMeMethod; 				// Motion estimation algorithm used for video coding. 
-	private short 						mExtraData; 			// some codecs need / can use extradata like Huffman tables. 
-	private int 						mExtradataSize;
-	
-	// This is the fundamental unit of time (in seconds) in terms of which frame timestamps are represented. 
-	private FFMpegAVRational			mTimeBase;
-	
-	// picture width / height.
-	private int 						mWidth;
-	private int 						mHeight;
-	
-	// the number of pictures in a group of pictures, or 0 for intra_only
-	// encoding: Set by user.
-	private int 						mGopSize;
+    private long          mPointer;
+    private FFMpegAVClass mAVClass;
+    private int           mBitRate;
+    private int           mBitRateTolerance;
+    private int           mFlags;
+    private int           mSubId;
+    private int           mMeMethod;     // Motion estimation algorithm used for video coding.
+    private short         mExtraData;    // some codecs need / can use extradata like Huffman tables.
+    private int           mExtradataSize;
 
-	// Frame rate emulation.
-	private int 						mRateEmu;
-   
-	// samples per second 
-	private int 						mSampleRate;
+    // This is the fundamental unit of time (in seconds) in terms of which frame timestamps are represented.
+    private FFMpegAVRational mTimeBase;
 
-	// number of audio channels 
-	private int 						mChannels;
+    // picture width / height.
+    private int mWidth;
+    private int mHeight;
 
- 	// Samples per packet, initialized when calling 'init'.
- 	private int 						mFrameSize;
- 	
- 	// audio or video frame number 
- 	private int 						mFrameNumber;
- 	
- 	
- 	
- 	public int getWidth() {
-		return mWidth;
-	}
+    // the number of pictures in a group of pictures, or 0 for intra_only
+    // encoding: Set by user.
+    private int mGopSize;
 
-	public int getHeight() {
-		return mHeight;
-	}
+    // Frame rate emulation.
+    private int mRateEmu;
 
-	public int getBitRate() {
-		return mBitRate;
-	}
+    // samples per second
+    private int mSampleRate;
 
-	public int getBitRateTolerance() {
-		return mBitRateTolerance;
-	}
+    // number of audio channels
+    private int mChannels;
 
-	public int getSampleRate() {
-		return mSampleRate;
-	}
+    // Samples per packet, initialized when calling 'init'.
+    private int mFrameSize;
 
-	public int getChannels() {
-		return mChannels;
-	}
+    // audio or video frame number
+    private int mFrameNumber;
 
-	public int getFrameSize() {
-		return mFrameSize;
-	}
+    public int getWidth() {
+        return mWidth;
+    }
 
-	public int getFrameNumber() {
-		return mFrameNumber;
-	}
+    public int getHeight() {
+        return mHeight;
+    }
 
-	protected native void release();
+    public int getBitRate() {
+        return mBitRate;
+    }
 
+    public int getBitRateTolerance() {
+        return mBitRateTolerance;
+    }
+
+    public int getSampleRate() {
+        return mSampleRate;
+    }
+
+    public int getChannels() {
+        return mChannels;
+    }
+
+    public int getFrameSize() {
+        return mFrameSize;
+    }
+
+    public int getFrameNumber() {
+        return mFrameNumber;
+    }
+
+    protected native void release();
 }
+
+
+//~ Formatted by Jindent --- http://www.jindent.com
