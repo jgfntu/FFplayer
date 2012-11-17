@@ -46,7 +46,7 @@ namespace ffplayer
         CHECK_POINTER_INT(mQueue, -1);
         mQueue -> abort();
         CHECK_POINTER_INT(mLoopThread, -1);
-        LOGD("waiting on end of mLoopThread thread");
+        LOGE("waiting on end of mLoopThread thread");
 
         if (mLoopThread)
         {

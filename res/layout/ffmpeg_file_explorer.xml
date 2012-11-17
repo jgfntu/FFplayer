@@ -4,13 +4,14 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
-        <TextView
+    <TextView
         android:id="@+id/network_path"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="@string/network_src" />
+
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal" >
 
@@ -18,25 +19,26 @@
             android:id="@+id/URLLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:text="@string/URLLabel" />
+            android:text="@string/URLLabel"
+            android:textSize="18sp" />
 
         <EditText
             android:id="@+id/NetURL"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:hint="@string/URLEditTextHint" >
+            android:layout_weight="1"
+            android:hint="@string/URLEditTextHint"
+            android:inputType="textUri" >
+
             <requestFocus />
         </EditText>
 
         <Button
             android:id="@+id/startBtn"
-            android:layout_width="62dip"
+            android:layout_width="wrap_content"
             android:layout_height="fill_parent"
-            android:text="@string/startBtnLabel"
             android:background="@drawable/btn_normal_lblue"
-            />
+            android:text="@string/startBtnLabel" />
     </LinearLayout>
 
     <TextView

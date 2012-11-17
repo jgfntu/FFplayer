@@ -111,6 +111,7 @@ namespace ffplayer
 
     int DecoderVideo::stop()
     {
+        LOGE("stop");
     }
 
     int DecoderVideo::start()

@@ -108,8 +108,6 @@ namespace ffplayer
     int PacketQueue::get(AVPacket * pkt,
                          bool       block)
     {
-        LOGD("PacketQueue::get() in block:%d", block);
-
         AVPacketList * pkt1;
         int            ret;
 
