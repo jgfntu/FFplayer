@@ -187,7 +187,7 @@ class MediaPlayer:
                                  const char * fmt,
                                  va_list      vl);
 
-        static void * startPlayer(void * ptr);
+        static void * PlayerThreadWrapper(void * ptr);
 
         static void render(AVFrame * frame);
 

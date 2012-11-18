@@ -38,6 +38,8 @@ namespace ffplayer
 
             virtual int start();
 
+            virtual int pause();
+
         private:
             AVFrame *       mFrame;
             double          mVideoClock;

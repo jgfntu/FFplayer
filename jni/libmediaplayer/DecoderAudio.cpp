@@ -37,8 +37,15 @@ namespace ffplayer
         CHECK_POINTER_INT(mLoopThread, -1);
         mLoopThread -> registerRunnable(this);
         mLoopThread -> start();
-
         return RET_SCCESS;
+    }
+
+
+    int DecoderAudio::pause()
+    {
+        CHECK_POINTER_INT(mLoopThread, -1);
+        mLoopThread->stop();
+        return 0;
     }
 
     int DecoderAudio::stop()
@@ -47,13 +54,7 @@ namespace ffplayer
         mQueue -> abort();
         CHECK_POINTER_INT(mLoopThread, -1);
         LOGE("waiting on end of mLoopThread thread");
-
-        if (mLoopThread)
-        {
-            // mLoopThread->stop();
-            mLoopThread -> quit();
-        }
-
+        mLoopThread -> quit();
         return RET_SCCESS;
     }
 
@@ -106,6 +107,7 @@ namespace ffplayer
     {
         return BuddyRunnable::GC_BY_EXTERNAL;
     }
+
 
     int DecoderAudio::bindBuddy(BuddyRunnable * buddy)
     {

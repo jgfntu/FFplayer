@@ -559,7 +559,7 @@ void MediaPlayer::decodeMovie(void* ptr)
 	}
 }
 
-void* MediaPlayer::startPlayer(void* ptr)
+void* MediaPlayer::PlayerThreadWrapper(void* ptr)
 {
     LOGD("starting main player thread");
 	attachCurrentThread();
@@ -569,10 +569,19 @@ void* MediaPlayer::startPlayer(void* ptr)
 
 status_t MediaPlayer::start()
 {
+	if (MEDIA_PLAYER_STOPPED == mCurrentState) {
+		if (mDecoderAudio) {
+			mDecoderAudio->start();
+			pthread_mutex_lock(&mQueueCondLock);
+			mCurrentState = MEDIA_PLAYER_STARTED;
+			pthread_cond_signal(&mQueueCond);
+			pthread_mutex_unlock(&mQueueCondLock);
+		}
+	}
 	if (mCurrentState != MEDIA_PLAYER_PREPARED) {
 		return INVALID_OPERATION;
 	}
-	return pthread_create(&mMainThread, NULL, startPlayer, NULL);
+	return pthread_create(&mMainThread, NULL, PlayerThreadWrapper, NULL);
 }
 
 status_t MediaPlayer::stop()
@@ -588,6 +597,9 @@ status_t MediaPlayer::pause()
 {
 	pthread_mutex_lock(&mQueueCondLock);
 	mCurrentState = MEDIA_PLAYER_PAUSED;
+	if (mDecoderAudio) {
+		mDecoderAudio->pause();
+	}
 	pthread_cond_signal(&mQueueCond);
 	pthread_mutex_unlock(&mQueueCondLock);
 	return NO_ERROR;

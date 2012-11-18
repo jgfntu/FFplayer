@@ -59,6 +59,8 @@ namespace ffplayer
 
             virtual int start();
 
+            virtual int pause();
+
         private:
             double          mTimer;
             int16_t *       mSamples;

@@ -50,7 +50,7 @@ namespace ffplayer
 
     int Thread::registerRunnable(BuddyRunnable * run)
     {
-        if (!run)
+        if (!run || run == mRunnable)
         {
             return -1;
         }

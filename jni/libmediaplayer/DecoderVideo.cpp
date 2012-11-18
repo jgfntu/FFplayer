@@ -42,6 +42,11 @@ namespace ffplayer
         mLastPts = 0.0;
     }
 
+    int DecoderVideo::pause()
+    {
+
+    }
+
     void DecoderVideo::onFinalize()
     {
         if (mFrame)

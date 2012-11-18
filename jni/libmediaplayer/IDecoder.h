@@ -26,6 +26,8 @@ namespace ffplayer
 
             virtual int start() = 0;
 
+            virtual int pause() = 0;
+
             virtual ~IDecoder()
             {
             }
