@@ -40,7 +40,7 @@ class JNIFFmpegMediaPlayerListener: public MediaPlayerListener
 {
 public:
     JNIFFmpegMediaPlayerListener(JNIEnv* env, jobject thiz, jobject weak_thiz);
-    ~JNIFFmpegMediaPlayerListener();
+    virtual ~JNIFFmpegMediaPlayerListener();
     void notify(int msg, int ext1, int ext2);
 private:
     JNIFFmpegMediaPlayerListener();

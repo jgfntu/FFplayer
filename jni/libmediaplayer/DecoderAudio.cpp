@@ -58,6 +58,16 @@ namespace ffplayer
         return RET_SCCESS;
     }
 
+    long DecoderAudio::getRealTimeMS()
+    {
+    	return mAudioClock * 1000;
+    }
+
+    void DecoderAudio::setRealTimeMS(long newMS)
+    {
+    	mAudioClock = newMS / 1000.0;
+    }
+
     DecoderAudio::~DecoderAudio()
     {
         CHECK_POINTER_VOID(mBuddy);

@@ -219,7 +219,6 @@ status_t MediaPlayer::prepareVideo()
 status_t MediaPlayer::prepare()
 {
 	status_t ret;
-	mCurrentState = MEDIA_PLAYER_PREPARING;
 	av_log_set_callback(ffmpegNotify);
 	if ((ret = prepareVideo()) != NO_ERROR) {
 		mCurrentState = MEDIA_PLAYER_STATE_ERROR;
@@ -303,7 +302,7 @@ status_t MediaPlayer::suspend() {
 }
 
 status_t MediaPlayer::resume() {
-	mCurrentState = MEDIA_PLAYER_STARTED;
+	mCurrentState = MEDIA_PLAYER_RUNNING;
     return NO_ERROR;
 }
 
@@ -321,7 +320,7 @@ status_t MediaPlayer::setVideoSurface(JNIEnv* env, jobject jsurface)
 bool MediaPlayer::shouldCancel(PacketQueue* queue)
 {
 	return (mCurrentState == MEDIA_PLAYER_STATE_ERROR || mCurrentState == MEDIA_PLAYER_STOPPED ||
-			 ((mCurrentState == MEDIA_PLAYER_DECODED || mCurrentState == MEDIA_PLAYER_STARTED)
+			 ((mCurrentState == MEDIA_PLAYER_RUNNING)
 			  && queue->size() == 0));
 }
 
@@ -417,14 +416,15 @@ status_t MediaPlayer::seekTo_l(int msec) {
 
     	LOGD("Finished flush Audio queque");
         mJustSeeked = true;
+        mSeekPosition = -1;
        return NO_ERROR;
 }
 
 status_t MediaPlayer::seekTo(int msec)
 {
-	LOGD("seekTo %d", msec);
-    if ((sPlayer != 0) && ( mCurrentState & ( MEDIA_PLAYER_STARTED | MEDIA_PLAYER_PREPARED | MEDIA_PLAYER_PAUSED |  MEDIA_PLAYER_PLAYBACK_COMPLETE) ) ) {
-        if ( msec < 0 ) {
+	LOGE("MediaPlayer::seekTo %d", msec);
+    if (mCurrentState == MEDIA_PLAYER_RUNNING || mCurrentState == MEDIA_PLAYER_PAUSED) {
+        if (msec < 0) {
             LOGE("Attempt to seek to invalid position: %d", msec);
             msec = 0;
         } else if ((mDuration > 0) && (msec > mDuration)) {
@@ -468,30 +468,23 @@ void MediaPlayer::decodeMovie(void* ptr)
 	mHasAudio = true;
 
 	AVStream* stream_audio = mMovieFile->streams[mAudioStreamIndex];
-	LOGD("before new Thread()!");
 	mDecoderThread = new Thread();
-	LOGD("after new Thread()!");
 
-	LOGD("before new DecoderAudio()!");
 	mDecoderAudio = new DecoderAudio(stream_audio, mAudioQueue = new PacketQueue(this), mDecoderThread);
-	LOGD("after new DecoderAudio()!");
 
 	mDecoderAudio->rendorHook = render;
 	if (-1 != mVideoStreamIndex) {
 		mHasVideo = true;
-		LOGD("mHasVideo true, continue!");
 		AVStream* stream_video = mMovieFile->streams[mVideoStreamIndex];
-		LOGD("before new DecoderVideo()!");
 		mDecoderVideo = new DecoderVideo(stream_video, mVideoQueue = new PacketQueue(this), NULL);
-		LOGD("after new DecoderVideo()!");
 		mDecoderVideo->rendorHook = render;
 		mDecoderAudio->bindBuddy(mDecoderVideo);
 		mDecoderVideo->start();
 	}
 	mDecoderAudio->start();
 
-	mCurrentState = MEDIA_PLAYER_STARTED;
-	LOGD("playing %ix%i", mVideoWidth, mVideoHeight);
+	mCurrentState = MEDIA_PLAYER_RUNNING;
+	LOGD("playing dimensions%ix%i", mVideoWidth, mVideoHeight);
 	int eof = 0;
 	while (validStatus())
 	{
@@ -504,7 +497,7 @@ void MediaPlayer::decodeMovie(void* ptr)
 		pthread_mutex_unlock(&mQueueCondLock);
 
 		if (mNeedToSeek) {
-			sPlayer->seekTo_l(mSeekPosition);
+			seekTo_l(mSeekPosition);
 			Output::AudioDriver_flush();
 			//Output::AudioDriver_reload();
 			mNeedToSeek = false;
@@ -533,11 +526,18 @@ void MediaPlayer::decodeMovie(void* ptr)
 
 		if (mJustSeeked) {
 			LOGD("We have JustSeeked!");
-			int64_t fakeNPT = pPacket.pts;
-			if (AV_NOPTS_VALUE == fakeNPT) {
-				fakeNPT = pPacket.dts;
+			int64_t newNPT = pPacket.pts;
+			if (AV_NOPTS_VALUE == newNPT) {
+				newNPT = pPacket.dts;
 			}
-			unsigned long keyTS = 1000 * fakeNPT * av_q2d(mMovieFile->streams[pPacket.stream_index]->time_base);
+			if (AV_NOPTS_VALUE == newNPT) {
+				mJustSeeked = false;
+				continue;
+			}
+			unsigned long keyTS = 1000 * newNPT * av_q2d(mMovieFile->streams[pPacket.stream_index]->time_base);
+			if (mDecoderAudio) {
+				mDecoderAudio->setRealTimeMS(keyTS);
+			}
 			mJustSeeked = false;
 			notify(MEDIA_SEEK_COMPLETE);
 		}
@@ -569,11 +569,11 @@ void* MediaPlayer::PlayerThreadWrapper(void* ptr)
 
 status_t MediaPlayer::start()
 {
-	if (MEDIA_PLAYER_STOPPED == mCurrentState) {
+	if (MEDIA_PLAYER_STOPPED == mCurrentState || MEDIA_PLAYER_PAUSED == mCurrentState) {
 		if (mDecoderAudio) {
 			mDecoderAudio->start();
 			pthread_mutex_lock(&mQueueCondLock);
-			mCurrentState = MEDIA_PLAYER_STARTED;
+			mCurrentState = MEDIA_PLAYER_RUNNING;
 			pthread_cond_signal(&mQueueCond);
 			pthread_mutex_unlock(&mQueueCondLock);
 		}
@@ -596,9 +596,9 @@ status_t MediaPlayer::stop()
 status_t MediaPlayer::pause()
 {
 	pthread_mutex_lock(&mQueueCondLock);
-	mCurrentState = MEDIA_PLAYER_PAUSED;
 	if (mDecoderAudio) {
 		mDecoderAudio->pause();
+		mCurrentState = MEDIA_PLAYER_PAUSED;
 	}
 	pthread_cond_signal(&mQueueCond);
 	pthread_mutex_unlock(&mQueueCondLock);
@@ -607,8 +607,7 @@ status_t MediaPlayer::pause()
 
 bool MediaPlayer::isPlaying()
 {
-    return mCurrentState == MEDIA_PLAYER_STARTED ||
-		mCurrentState == MEDIA_PLAYER_DECODED;
+    return mCurrentState == MEDIA_PLAYER_RUNNING;
 }
 
 status_t MediaPlayer::getVideoWidth(int *w)
@@ -622,7 +621,7 @@ status_t MediaPlayer::getVideoWidth(int *w)
 
 status_t MediaPlayer::getVideoHeight(int *h)
 {
-	if (mCurrentState < MEDIA_PLAYER_PREPARED) {
+	if (mCurrentState < MEDIA_PLAYER_PREPARED || !h) {
 		return INVALID_OPERATION;
 	}
 	*h = mVideoHeight;
@@ -631,21 +630,21 @@ status_t MediaPlayer::getVideoHeight(int *h)
 
 status_t MediaPlayer::getCurrentPosition(int *msec)
 {
-	if (mCurrentState < MEDIA_PLAYER_PREPARED) {
+	if (mCurrentState < MEDIA_PLAYER_PREPARED || !msec || !mDecoderAudio) {
 		return INVALID_OPERATION;
 	}
 
-	//*msec = (MediaClock::instance())->getCurClock();/*av_gettime()*/;
+	*msec = mDecoderAudio->getRealTimeMS();/*av_gettime()*/;
 	return NO_ERROR;
 }
 
 status_t MediaPlayer::getDuration(int *msec)
 {
-	if (mCurrentState < MEDIA_PLAYER_PREPARED) {
+	if (mCurrentState < MEDIA_PLAYER_PREPARED || !msec) {
 		return INVALID_OPERATION;
 	}
 	*msec = mDuration;
-       return NO_ERROR;
+    return NO_ERROR;
 }
 
 status_t MediaPlayer::reset()

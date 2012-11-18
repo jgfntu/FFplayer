@@ -161,7 +161,7 @@ namespace ffplayer
         }
 
         pthread_mutex_unlock(&mLock);
-        LOGD("PacketQueue::get() out ret:%d", ret);
+        //LOGD("PacketQueue::get() out ret:%d", ret);
 
         return ret;
     }

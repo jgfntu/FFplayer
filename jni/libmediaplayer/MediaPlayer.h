@@ -15,9 +15,8 @@ using namespace ffplayer;
 
 enum media_event_type
 {
-    MEDIA_NOP = 0,    // interface test message
-    MEDIA_PREPARED = 1, MEDIA_PLAYBACK_COMPLETE = 2, MEDIA_BUFFERING_UPDATE = 3, MEDIA_SEEK_COMPLETE = 4,
-    MEDIA_SET_VIDEO_SIZE = 5, MEDIA_ERROR = 100, MEDIA_INFO = 200,
+    MEDIA_NOP = 0, MEDIA_PREPARED = 1, MEDIA_PLAYBACK_COMPLETE = 2, MEDIA_BUFFERING_UPDATE = 3,
+    MEDIA_SEEK_COMPLETE = 4, MEDIA_SET_VIDEO_SIZE = 5, MEDIA_ERROR = 100, MEDIA_INFO = 200,
 };
 
 // Generic error codes for the media player framework.  Errors are fatal, the
@@ -95,9 +94,8 @@ enum media_info_type
 enum media_player_states
 {
     MEDIA_PLAYER_STATE_ERROR = 0, MEDIA_PLAYER_IDLE = 1 << 0, MEDIA_PLAYER_INITIALIZED = 1 << 1,
-    MEDIA_PLAYER_PREPARING = 1 << 2, MEDIA_PLAYER_PREPARED = 1 << 3, MEDIA_PLAYER_DECODED = 1 << 4,
-    MEDIA_PLAYER_STARTED = 1 << 5, MEDIA_PLAYER_PAUSED = 1 << 6, MEDIA_PLAYER_STOPPED = 1 << 7,
-    MEDIA_PLAYER_PLAYBACK_COMPLETE = 1 << 8
+    MEDIA_PLAYER_PREPARED = 1 << 2, MEDIA_PLAYER_RUNNING = 1 << 3, MEDIA_PLAYER_PAUSED = 1 << 4,
+    MEDIA_PLAYER_STOPPED = 1 << 5, MEDIA_PLAYER_PLAYBACK_COMPLETE = 1 << 6
 };
 
 // ----------------------------------------------------------------------------
@@ -117,7 +115,7 @@ class MediaPlayer:
     public:
         MediaPlayer();
 
-        ~MediaPlayer();
+        virtual ~MediaPlayer();
 
         status_t setDataSource(const char * url);
 
@@ -166,8 +164,7 @@ class MediaPlayer:
     private:
         inline bool validStatus()
         {
-            return ((mCurrentState != MEDIA_PLAYER_DECODED) && (mCurrentState != MEDIA_PLAYER_STOPPED)
-                    && (mCurrentState != MEDIA_PLAYER_STATE_ERROR));
+            return ((mCurrentState != MEDIA_PLAYER_STOPPED) && (mCurrentState != MEDIA_PLAYER_STATE_ERROR));
         }
 
         inline bool resSufficient()

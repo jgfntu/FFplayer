@@ -1,5 +1,7 @@
 package com.media.ffmpeg.android;
 
+//~--- non-JDK imports --------------------------------------------------------
+
 import android.content.Context;
 
 import android.util.AttributeSet;
@@ -15,16 +17,18 @@ import android.widget.MediaController.MediaPlayerControl;
 import com.media.ffmpeg.FFMpegPlayer;
 import com.media.ffmpeg.FFMpegPlayer.OnCompletionListener;
 
+//~--- JDK imports ------------------------------------------------------------
+
 import java.io.IOException;
 
 public class FFMpegMovieViewAndroid extends SurfaceView {
     private static final String TAG         = "FFMpegMovieViewAndroid";
     SurfaceHolder.Callback      mSHCallback = new SurfaceHolder.Callback() {
         public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-            startVideo();
+            startRenderVideo();
         }
         public void surfaceCreated(SurfaceHolder holder) {
-            openVideo(holder);
+            setDisplay(holder);
         }
         public void surfaceDestroyed(SurfaceHolder holder) {
             release();
@@ -36,24 +40,26 @@ public class FFMpegMovieViewAndroid extends SurfaceView {
     };
     MediaPlayerControl mMediaPlayerControl = new MediaPlayerControl() {
         public void start() {
-            mPlayer.resume();
+            Log.d(TAG, "start() ");
+            //mPlayer.resume();
+            if (!mPlayer.isPlaying()) {
+            	mPlayer.start();
+            }
         }
         public void seekTo(int msec) {
             Log.d(TAG, "seek to " + msec);
-
             if (mPlayer != null) {
                 mPlayer.seekTo(msec);
             }
         }
         public void pause() {
+            Log.d(TAG, "pause() ");
             mPlayer.pause();
         }
         public boolean isPlaying() {
             return mPlayer.isPlaying();
         }
         public int getDuration() {
-
-            // Log.d(TAG, "The Duration is " + mPlayer.getDuration());
             return mPlayer.getDuration();
         }
         public int getCurrentPosition() {
@@ -131,16 +137,24 @@ public class FFMpegMovieViewAndroid extends SurfaceView {
         mMediaController.setMediaPlayer(mMediaPlayerControl);
         mMediaController.setAnchorView(anchorView);
 
-        OnClickListener preNextCmdListener = new OnClickListener() {
+        OnClickListener nextClickListener = new OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 // TODO Auto-generated method stub
-                Log.d(TAG, "Pre or Next btn is clicked!");
+                Log.d(TAG, "Next btn is clicked!");
+            }
+        };
+        OnClickListener prevClickListener = new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                // TODO Auto-generated method stub
+                Log.d(TAG, "Pre btn is clicked!");
             }
         };
 
-        mMediaController.setPrevNextListeners(preNextCmdListener, preNextCmdListener);
+        mMediaController.setPrevNextListeners(nextClickListener, prevClickListener);
         mMediaController.setEnabled(true);
     }
 
@@ -151,7 +165,7 @@ public class FFMpegMovieViewAndroid extends SurfaceView {
     /**
      * initzialize player
      */
-    private void openVideo(SurfaceHolder surfHolder) {
+    private void setDisplay(SurfaceHolder surfHolder) {
         try {
             mPlayer.setDisplay(surfHolder);
             mPlayer.prepare();
@@ -162,7 +176,7 @@ public class FFMpegMovieViewAndroid extends SurfaceView {
         }
     }
 
-    private void startVideo() {
+    private void startRenderVideo() {
         attachMediaController();
         mPlayer.start();
     }
@@ -181,3 +195,6 @@ public class FFMpegMovieViewAndroid extends SurfaceView {
         return true;
     }
 }
+
+
+//~ Formatted by Jindent --- http://www.jindent.com

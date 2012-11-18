@@ -13,6 +13,7 @@ extern "C"
 #include "BuddyRunnable.h"
 #include "PacketQueue.h"
 #include "Thread.h"
+#include "TimeSource.h"
 
 namespace ffplayer
 {
@@ -20,7 +21,8 @@ namespace ffplayer
 
     class DecoderAudio:
         public BuddyRunnable,
-        public IDecoder
+        public IDecoder,
+        public TimeSource
     {
         using BuddyRunnable::BuddyType;
         using BuddyRunnable::BuddyEvent;
@@ -32,7 +34,7 @@ namespace ffplayer
                          PacketQueue * queue,
                          Thread *      loopThread);
 
-            ~DecoderAudio();
+            virtual ~DecoderAudio();
 
             AudioDecodingHandler rendorHook;
 
@@ -60,7 +62,10 @@ namespace ffplayer
             virtual int start();
 
             virtual int pause();
+            // interface of TimeSource
+            long getRealTimeMS();
 
+            void setRealTimeMS(long newMS);
         private:
             double          mTimer;
             int16_t *       mSamples;
