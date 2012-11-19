@@ -98,6 +98,7 @@ namespace ffplayer
         pthread_mutex_lock(&mThreadStatusLock);
 
         mStatus = THREAD_STOPPED;
+        pthread_cond_signal(&mCondition);
 
         pthread_mutex_unlock(&mThreadStatusLock);
     }
@@ -105,6 +106,9 @@ namespace ffplayer
     void * Thread::ThreadWrapper(void * ptr)
     {
         LOGD("starting thread");
+
+        if (!ptr)
+        	return NULL;
 
         Thread * thread = (Thread *) ptr;
 
@@ -127,9 +131,8 @@ namespace ffplayer
     void Thread::quit()
     {
         pthread_mutex_lock(&mThreadStatusLock);
-
         mStatus = THREAD_EXITED;
-
+    	pthread_cond_signal(&mCondition);
         pthread_join(mThread, NULL);
         pthread_mutex_unlock(&mThreadStatusLock);
     }

@@ -202,10 +202,6 @@ namespace ffplayer
             return -1;
         }
 
-        global_video_pkt_pts = pkt.pts;
-
-        LOGD("global_video_pkt_pts:%lld", global_video_pkt_pts);
-
         /*
          *  Process some special Events
          * 1) BOS
@@ -223,6 +219,11 @@ namespace ffplayer
 
             return false;
         }
+
+        global_video_pkt_pts = pkt.pts;
+
+        LOGD("global_video_pkt_pts:%lld", global_video_pkt_pts);
+
 
         int       got_picture;
         long long pts = 0;

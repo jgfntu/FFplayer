@@ -42,9 +42,7 @@ public class FFMpegPlayerActivity extends Activity {
             // mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, TAG);
             try {
                 FFMpeg ffmpeg = new FFMpeg();
-
                 mMovieView = ffmpeg.getMovieView(this);
-
                 try {
                     mMovieView.setVideoPath(filePath);
                 } catch (IllegalArgumentException e) {
@@ -57,7 +55,6 @@ public class FFMpegPlayerActivity extends Activity {
                     Log.e(TAG, "Can't set video: " + e.getMessage());
                     FFMpegMessageBox.show(this, e);
                 }
-
                 setContentView(mMovieView);
             } catch (FFMpegException e) {
                 Log.d(TAG, "Error when inicializing ffmpeg: " + e.getMessage());

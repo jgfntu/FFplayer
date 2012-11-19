@@ -413,7 +413,6 @@ status_t MediaPlayer::seekTo_l(int msec) {
     	/*TODO: first flush the dataQueue, then push some silent data to it, so as to feed the AudioTrack continously*/
         mDecoderAudio->flush();
         mAudioQueue->put(&BOS_PKT);
-
     	LOGD("Finished flush Audio queque");
         mJustSeeked = true;
         mSeekPosition = -1;
@@ -491,23 +490,26 @@ void MediaPlayer::decodeMovie(void* ptr)
 		pthread_mutex_lock(&mQueueCondLock);
 		// when mCurrentState set to stopped, need to quit the Main PlayerThread
 		// so cancel wait operation
-		while ((mCurrentState != MEDIA_PLAYER_STOPPED) && resSufficient()) {
+		while (((mCurrentState == MEDIA_PLAYER_RUNNING) && resSufficient())
+				|| (mCurrentState == MEDIA_PLAYER_PAUSED)
+				|| (mCurrentState == MEDIA_PLAYER_STOPPED)) {
+			LOGD("main thread wait on condition!")
 			pthread_cond_wait(&mQueueCond, &mQueueCondLock);
 		}
 		pthread_mutex_unlock(&mQueueCondLock);
 
 		if (mNeedToSeek) {
+			LOGD("mNeedToSeek:true ready to call seekTo_l()");
 			seekTo_l(mSeekPosition);
 			Output::AudioDriver_flush();
 			//Output::AudioDriver_reload();
 			mNeedToSeek = false;
 		}
 
-		int ret;
-		ret = av_read_frame(mMovieFile, &pPacket);
-		LOGD("av_read_frame ret:%d", ret);
+		int ret = av_read_frame(mMovieFile, &pPacket);
 
 		if (ret < 0) {
+			LOGD("av_read_frame ret:%d < 0", ret);
 			if (ret == AVERROR_EOF || url_feof(mMovieFile->pb))
 				eof = 1;
 			if (mMovieFile->pb && mMovieFile->pb->error)
@@ -536,6 +538,7 @@ void MediaPlayer::decodeMovie(void* ptr)
 			}
 			unsigned long keyTS = 1000 * newNPT * av_q2d(mMovieFile->streams[pPacket.stream_index]->time_base);
 			if (mDecoderAudio) {
+				LOGD("set the clock to %ld", keyTS);
 				mDecoderAudio->setRealTimeMS(keyTS);
 			}
 			mJustSeeked = false;

@@ -140,7 +140,6 @@ public class FFMpegMovieViewAndroid extends SurfaceView {
         OnClickListener nextClickListener = new OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 // TODO Auto-generated method stub
                 Log.d(TAG, "Next btn is clicked!");
             }
@@ -148,7 +147,6 @@ public class FFMpegMovieViewAndroid extends SurfaceView {
         OnClickListener prevClickListener = new OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 // TODO Auto-generated method stub
                 Log.d(TAG, "Pre btn is clicked!");
             }

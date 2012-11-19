@@ -295,7 +295,7 @@ namespace ffplayer
         evt.data.dData = mAudioClock;
 
         LOGD("Ready to call mBuddy's onBuddyEvent()");
-        mBuddy -> onBuddyEvent(this, evt);
+        mBuddy-> onBuddyEvent(this, evt);
         av_free_packet(&pkt);
         LOGD("Ready to call av_free_packet() called!");
 

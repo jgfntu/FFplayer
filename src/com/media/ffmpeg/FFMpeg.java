@@ -24,7 +24,7 @@ public class FFMpeg {
     /* These libs is compiled for GingerBread, which is the default target OS */
     public static final String[] defaultLIBS = new String[] { "ffmpeg", "jniaudio9", "jnivideo9", "ffmpeg_jni9" };
     public static final String[] EXTENSIONS  = new String[] {
-        ".mp4", ".flv", ".avi", ".wmv", ".ts", ".ogg", ".ogv", ".rm", ".rmvb"
+        ".mp4", ".flv", ".avi", ".wmv", ".ts", ".ogg", ".ogv", ".rm", ".rmvb", ".mkv"
     };
     private static boolean       sLoaded     = false;
     private Thread               mThread;
