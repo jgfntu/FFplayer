@@ -26,57 +26,57 @@ jobject AVFormatContext_create(JNIEnv *env, AVFormatContext *fileContext) {
 
 	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz,
 			"nb_streams", "I"), fileContext->nb_streams);
-	(*env)->SetIntField(env, result,
-			(*env)->GetFieldID(env, clazz, "year", "I"), fileContext->year);
-	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz, "track",
-			"I"), fileContext->track);
-	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz, "bit_rate",
-			"I"), fileContext->bit_rate);
-	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz, "mux_rate",
-			"I"), fileContext->mux_rate);
-	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz,
-			"packet_size", "I"), fileContext->packet_size);
-	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz, "preload",
-			"I"), fileContext->preload);
-	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz,
-			"max_delay", "I"), fileContext->max_delay);
-	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz,
-			"loop_output", "I"), fileContext->loop_output);
-	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz, "flags",
-			"I"), fileContext->flags);
-	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz,
-			"loop_input", "I"), fileContext->loop_input);
-
-	(*env)->SetLongField(env, result, (*env)->GetFieldID(env, clazz,
-			"timestamp", "J"), fileContext->timestamp);
-	(*env)->SetLongField(env, result, (*env)->GetFieldID(env, clazz,
-			"start_time", "J"), fileContext->start_time);
-	(*env)->SetLongField(env, result, (*env)->GetFieldID(env, clazz,
-			"duration", "J"), fileContext->duration);
-	(*env)->SetLongField(env, result, (*env)->GetFieldID(env, clazz,
-			"file_size", "J"), fileContext->file_size);
-	(*env)->SetObjectField(env, result, (*env)->GetFieldID(env, clazz,
-			"filename", "Ljava/lang/String;"), (*env)->NewStringUTF(env,
-			fileContext->filename));
-	(*env)->SetObjectField(env, result, (*env)->GetFieldID(env, clazz, "title",
-			"Ljava/lang/String;"),
-			(*env)->NewStringUTF(env, fileContext->title));
-	(*env)->SetObjectField(env, result, (*env)->GetFieldID(env, clazz,
-			"author", "Ljava/lang/String;"), (*env)->NewStringUTF(env,
-			fileContext->author));
-	(*env)->SetObjectField(env, result, (*env)->GetFieldID(env, clazz,
-			"copyright", "Ljava/lang/String;"), (*env)->NewStringUTF(env,
-			fileContext->copyright));
-	(*env)->SetObjectField(env, result, (*env)->GetFieldID(env, clazz,
-			"comment", "Ljava/lang/String;"), (*env)->NewStringUTF(env,
-			fileContext->comment));
-	(*env)->SetObjectField(env, result, (*env)->GetFieldID(env, clazz, "album",
-			"Ljava/lang/String;"),
-			(*env)->NewStringUTF(env, fileContext->album));
-	(*env)->SetObjectField(env, result, (*env)->GetFieldID(env, clazz, "genre",
-			"Ljava/lang/String;"),
-			(*env)->NewStringUTF(env, fileContext->genre));
-	return result;
+//	(*env)->SetIntField(env, result,
+//			(*env)->GetFieldID(env, clazz, "year", "I"), fileContext->year);
+//	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz, "track",
+//			"I"), fileContext->track);
+//	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz, "bit_rate",
+//			"I"), fileContext->bit_rate);
+//	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz, "mux_rate",
+//			"I"), fileContext->mux_rate);
+//	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz,
+//			"packet_size", "I"), fileContext->packet_size);
+//	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz, "preload",
+//			"I"), fileContext->preload);
+//	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz,
+//			"max_delay", "I"), fileContext->max_delay);
+//	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz,
+//			"loop_output", "I"), fileContext->loop_output);
+//	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz, "flags",
+//			"I"), fileContext->flags);
+//	(*env)->SetIntField(env, result, (*env)->GetFieldID(env, clazz,
+//			"loop_input", "I"), fileContext->loop_input);
+//
+//	(*env)->SetLongField(env, result, (*env)->GetFieldID(env, clazz,
+//			"timestamp", "J"), fileContext->timestamp);
+//	(*env)->SetLongField(env, result, (*env)->GetFieldID(env, clazz,
+//			"start_time", "J"), fileContext->start_time);
+//	(*env)->SetLongField(env, result, (*env)->GetFieldID(env, clazz,
+//			"duration", "J"), fileContext->duration);
+//	(*env)->SetLongField(env, result, (*env)->GetFieldID(env, clazz,
+//			"file_size", "J"), fileContext->file_size);
+//	(*env)->SetObjectField(env, result, (*env)->GetFieldID(env, clazz,
+//			"filename", "Ljava/lang/String;"), (*env)->NewStringUTF(env,
+//			fileContext->filename));
+//	(*env)->SetObjectField(env, result, (*env)->GetFieldID(env, clazz, "title",
+//			"Ljava/lang/String;"),
+//			(*env)->NewStringUTF(env, fileContext->title));
+//	(*env)->SetObjectField(env, result, (*env)->GetFieldID(env, clazz,
+//			"author", "Ljava/lang/String;"), (*env)->NewStringUTF(env,
+//			fileContext->author));
+//	(*env)->SetObjectField(env, result, (*env)->GetFieldID(env, clazz,
+//			"copyright", "Ljava/lang/String;"), (*env)->NewStringUTF(env,
+//			fileContext->copyright));
+//	(*env)->SetObjectField(env, result, (*env)->GetFieldID(env, clazz,
+//			"comment", "Ljava/lang/String;"), (*env)->NewStringUTF(env,
+//			fileContext->comment));
+//	(*env)->SetObjectField(env, result, (*env)->GetFieldID(env, clazz, "album",
+//			"Ljava/lang/String;"),
+//			(*env)->NewStringUTF(env, fileContext->album));
+//	(*env)->SetObjectField(env, result, (*env)->GetFieldID(env, clazz, "genre",
+//			"Ljava/lang/String;"),
+//			(*env)->NewStringUTF(env, fileContext->genre));
+//	return result;
 }
 
 static void AVFormatContext_release(JNIEnv *env, jobject thiz, jint pointer) {

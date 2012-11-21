@@ -25,46 +25,46 @@ jobject AVCodecContext_create(JNIEnv *env, AVCodecContext *codecContext) {
 	//env->SetIntField(result,
 	//				 env->GetFieldID(clazz, "mPointer", "I"),
 	//				 (jint)frame);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mBitRate", "I"),
 					 codecContext->bit_rate);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mBitRateTolerance", "I"),
 					 codecContext->bit_rate_tolerance);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mFlags", "I"),
 					 codecContext->flags);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mSubId", "I"),
 					 codecContext->sub_id);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mMeMethod", "I"),
 					 codecContext->me_method);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mExtradataSize", "I"),
 					 codecContext->extradata_size);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mWidth", "I"),
 					 codecContext->width);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mHeight", "I"),
 					 codecContext->height);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mGopSize", "I"),
 					 codecContext->gop_size);
-	env->SetIntField(result, 
-					 env->GetFieldID(clazz, "mRateEmu", "I"),
-					 codecContext->rate_emu);
-	env->SetIntField(result, 
+//	env->SetIntField(result,
+//					 env->GetFieldID(clazz, "mRateEmu", "I"),
+//					 codecContext->rate_emu);
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mSampleRate", "I"),
 					 codecContext->sample_rate);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mChannels", "I"),
 					 codecContext->channels);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mFrameSize", "I"),
 					 codecContext->frame_size);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mFrameNumber", "I"),
 					 codecContext->frame_number);
 

@@ -1,0 +1,6 @@
+LIBAVCODEC_54 {
+        global: av*;
+                audio_resample;
+                audio_resample_close;
+        local:  *;
+};

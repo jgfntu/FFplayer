@@ -1,0 +1,4 @@
+LIBAVFORMAT_54 {
+        global: av*;
+        local: *;
+};

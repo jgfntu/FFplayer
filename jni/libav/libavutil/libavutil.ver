@@ -1,0 +1,4 @@
+LIBAVUTIL_52 {
+        global: av*;
+        local: *;
+};

@@ -143,7 +143,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     }
 #endif
 
-    if(register_android_media_FFMpegAVFormatContext(env) != JNI_OK) {
+  /*  if(register_android_media_FFMpegAVFormatContext(env) != JNI_OK) {
     	__android_log_print(ANDROID_LOG_ERROR, TAG, "can't load android_media_FFMpegAVFormatContext");
         goto end;
 	}
@@ -171,7 +171,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 	if(register_android_media_FFMpegAVFrame(env) != JNI_OK) {
 		__android_log_print(ANDROID_LOG_ERROR, TAG, "can't load android_media_FFMpegAVFrame");
 		goto end;
-	}
+	}*/
 
 #ifdef BUILD_WITH_PLAYER
     if(register_android_media_FFMpegPlayerAndroid(env) != JNI_OK) {

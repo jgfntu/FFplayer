@@ -22,23 +22,23 @@ jobject *AVInputFormat_create(JNIEnv *env, AVInputFormat *format) {
 	jclass *clazz = AVInputFormat_getClass(env);
 	jobject result = (*env)->NewObject(env, clazz, fields.constructor);
 
-	(*env)->SetIntField(env, result, 
-						(*env)->GetFieldID(env, clazz, "mPrivDataSize", "I"), 
+	(*env)->SetIntField(env, result,
+						(*env)->GetFieldID(env, clazz, "mPrivDataSize", "I"),
 						format->priv_data_size);
-	(*env)->SetIntField(env, result, 
-						(*env)->GetFieldID(env, clazz, "mFlags", "I"), 
+	(*env)->SetIntField(env, result,
+						(*env)->GetFieldID(env, clazz, "mFlags", "I"),
 						format->flags);
-	(*env)->SetIntField(env, result, 
-						(*env)->GetFieldID(env, clazz, "mValue", "I"), 
-						format->value);
-	
-	(*env)->SetObjectField(env, result, 
+//	(*env)->SetIntField(env, result,
+//						(*env)->GetFieldID(env, clazz, "mValue", "I"),
+//						format->value);
+
+	(*env)->SetObjectField(env, result,
 						   (*env)->GetFieldID(env, clazz, "mName", "Ljava/lang/String;"),
 						   (*env)->NewStringUTF(env, format->name));
-	(*env)->SetObjectField(env, result, 
+	(*env)->SetObjectField(env, result,
 						   (*env)->GetFieldID(env, clazz, "mName", "Ljava/lang/String;"),
 						   (*env)->NewStringUTF(env, format->long_name));
-	(*env)->SetObjectField(env, result, 
+	(*env)->SetObjectField(env, result,
 						   (*env)->GetFieldID(env, clazz, "mExtensions","Ljava/lang/String;"),
 						   (*env)->NewStringUTF(env, format->extensions));
 

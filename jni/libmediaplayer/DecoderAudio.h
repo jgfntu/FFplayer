@@ -78,7 +78,7 @@ namespace ffplayer
             double          mLastClock;
             int64_t         mLastAbsTime;
 
-            inline int bytesPerSample(enum SampleFormat sample_fmt);
+            inline int bytesPerSample(enum AVSampleFormat sample_fmt);
 
             int decodeRender();
 

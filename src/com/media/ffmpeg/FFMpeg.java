@@ -50,36 +50,11 @@ public class FFMpeg {
     }
 
     String[] getLibsBySDKVesion(int sdkVersion) {
-        switch (sdkVersion) {
-        case VERSION_CODES.FROYO :
-            return new String[] {
-                "ffmpeg", "jniaudio",      // used for access to android
-                "jnivideo",
-                "ffmpeg_jni8"              // ffmpeg libs compiled to jni lib
-            };
-
-        case VERSION_CODES.GINGERBREAD :
-        case VERSION_CODES.GINGERBREAD_MR1 :
-            return new String[] {
-                "ffmpeg", "jniaudio9",     // used for access to android
-                "jnivideo9",
-                "ffmpeg_jni9"              // ffmpeg libs compiled to jni lib
-            };
-
-        /* For ICS */
-        case 14 :
-        case 15 :
-            return new String[] {
-                "ffmpeg", "jniaudio14",    // used for access to android
-                "jnivideo14",
-                "ffmpeg_jni14"             // ffmpeg libs compiled to jni lib
-            };
-
-        default :
-            Log.e(TAG, "Maybe the sdkVersion:" + sdkVersion + " is not valid!");
-
-            return defaultLIBS;
-        }
+        return new String[] {
+            "jniaudio",      // used for access to android
+            "jnivideo",
+            "ffmpeg_jni"              // ffmpeg libs compiled to jni lib
+        };
     }
 
     /**

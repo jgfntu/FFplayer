@@ -19,7 +19,7 @@ extern "C" {
 #include <common/logwrapper.h>
 #include "Thread.h"
 #include "MediaPlayer.h"
-#include "output.h"
+#include "Output.h"
 using namespace ffplayer;
 #ifndef INT64_MIN
 #define INT64_MIN       (-0x7fffffff - 1)
@@ -65,7 +65,8 @@ MediaPlayer::MediaPlayer():
 	    mVideoQueue(NULL),
 	    mAudioQueue(NULL),
 	    mHasAudio(false),
-	    mHasVideo(false)
+	    mHasVideo(false),
+	    mFormatCtx(NULL)
 {
     pthread_mutex_init(&mQueueCondLock, NULL);
     pthread_cond_init(&mQueueCond, NULL);
@@ -103,8 +104,8 @@ status_t MediaPlayer::prepareAudio()
 {
 	LOGD("TAG, prepareAudio");
 	mAudioStreamIndex = -1;
-	for (int i = 0; i < mMovieFile->nb_streams; i++) {
-		if (mMovieFile->streams[i]->codec->codec_type == CODEC_TYPE_AUDIO) {
+	for (int i = 0; i < mFormatCtx->nb_streams; i++) {
+		if (mFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
 			mAudioStreamIndex = i;
 			break;
 		}
@@ -114,7 +115,7 @@ status_t MediaPlayer::prepareAudio()
 		return INVALID_OPERATION;
 	}
 
-	AVStream* stream = mMovieFile->streams[mAudioStreamIndex];
+	AVStream* stream = mFormatCtx->streams[mAudioStreamIndex];
 	// Get a pointer to the codec context for the video stream
 	AVCodecContext* codec_ctx = stream->codec;
 	AVCodec* codec = avcodec_find_decoder(codec_ctx->codec_id);
@@ -123,7 +124,7 @@ status_t MediaPlayer::prepareAudio()
 	}
 
 	// Open codec
-	if (avcodec_open(codec_ctx, codec) < 0) {
+	if (avcodec_open2(codec_ctx, codec, NULL) < 0) {
 		return INVALID_OPERATION;
 	}
 
@@ -148,8 +149,8 @@ status_t MediaPlayer::prepareVideo()
 	LOGD("prepareVideo");
 	// Find the first video stream
 	mVideoStreamIndex = -1;
-	for (int i = 0; i < mMovieFile->nb_streams; i++) {
-		if (mMovieFile->streams[i]->codec->codec_type == CODEC_TYPE_VIDEO) {
+	for (int i = 0; i < mFormatCtx->nb_streams; i++) {
+		if (mFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
 			mVideoStreamIndex = i;
 			break;
 		}
@@ -159,7 +160,7 @@ status_t MediaPlayer::prepareVideo()
 		return INVALID_OPERATION;
 	}
 
-	AVStream* stream = mMovieFile->streams[mVideoStreamIndex];
+	AVStream* stream = mFormatCtx->streams[mVideoStreamIndex];
 	// Get a pointer to the codec context for the video stream
 	AVCodecContext* codec_ctx = stream->codec;
 	AVCodec* codec = avcodec_find_decoder(codec_ctx->codec_id);
@@ -169,14 +170,14 @@ status_t MediaPlayer::prepareVideo()
 	}
 
 	// Open codec
-	if (avcodec_open(codec_ctx, codec) < 0) {
+	if (avcodec_open2(codec_ctx, codec, NULL) < 0) {
 		LOGE("Video codec cannot be open success!!");
 		return INVALID_OPERATION;
 	}
 
 	mVideoWidth = codec_ctx->width;
 	mVideoHeight = codec_ctx->height;
-	mDuration =  mMovieFile->duration / AV_TIME_BASE * 1000;
+	mDuration =  mFormatCtx->duration / AV_TIME_BASE * 1000;
 
 	mConvertCtx = sws_getContext(stream->codec->width,
 								 stream->codec->height,
@@ -230,11 +231,11 @@ status_t MediaPlayer::prepare()
 	}
 	mCurrentState = MEDIA_PLAYER_PREPARED;
 	/* in the unit of ms */
-	mDuration = mMovieFile->duration / AV_TIME_BASE * 1000;
-	AVStream *stream = mMovieFile->streams[mVideoStreamIndex];
+	mDuration = mFormatCtx->duration / AV_TIME_BASE * 1000;
+	AVStream *stream = mFormatCtx->streams[mVideoStreamIndex];
 	int duration = stream->duration * av_q2d(stream->time_base) * 1000;
 	mDuration = mDuration > duration ? mDuration : duration;
-	stream = mMovieFile->streams[mAudioStreamIndex];
+	stream = mFormatCtx->streams[mAudioStreamIndex];
 	duration = stream->duration * av_q2d(stream->time_base) * 1000;
 	mDuration = mDuration > duration ? mDuration : duration;
 
@@ -254,14 +255,14 @@ status_t MediaPlayer::setDataSource(const char *url)
 	LOGD("setDataSource(%s)", url);
     status_t err = BAD_VALUE;
 	// Open video file
-    int res = av_open_input_file(&mMovieFile, url, NULL, 0, NULL);
+    int res = avformat_open_input(&mFormatCtx, url, NULL, NULL);
 	LOGD("av_open_input_file(res:%d)", res);
 
 	if(res != 0) {
 		return INVALID_OPERATION;
 	}
 	// Retrieve stream information
-	if(av_find_stream_info(mMovieFile) < 0) {
+	if(avformat_find_stream_info(mFormatCtx, NULL) < 0) {
 		return INVALID_OPERATION;
 	}
 
@@ -292,7 +293,7 @@ status_t MediaPlayer::suspend() {
 	free(mDecoderVideo);
 
 	// Close the video file
-	av_close_input_file(mMovieFile);
+	av_close_input_file(mFormatCtx);
 
 	//close OS drivers
 	Output::AudioDriver_unregister();
@@ -352,7 +353,7 @@ void MediaPlayer::render(AVFrame* frame)
 			  sPlayer->mFrame->data,
 			  sPlayer->mFrame->linesize);
 
-	Output::VideoDriver_updateSurface();
+	Output::VideoDriver_updateSurface(true);
 }
 
 void MediaPlayer::render(int16_t* buffer, int buffer_size)
@@ -386,13 +387,13 @@ void MediaPlayer::render(int16_t* buffer, int buffer_size)
 status_t MediaPlayer::seekTo_l(int msec) {
 	LOGD("seekTo_l %d", msec);
 	int ret;
-        if (mMovieFile->start_time != AV_NOPTS_VALUE)
-            msec += mMovieFile->start_time;
+        if (mFormatCtx->start_time != AV_NOPTS_VALUE)
+            msec += mFormatCtx->start_time;
 
         msec = msec * AV_TIME_BASE / 1000 ;
     	LOGD("The final seek ts:%d", msec);
 
-        ret = avformat_seek_file(mMovieFile, -1, INT64_MIN, msec, INT64_MAX, 0);
+        ret = avformat_seek_file(mFormatCtx, -1, INT64_MIN, msec, INT64_MAX, 0);
 
     	LOGD("The ret of avformat_seek_file (%d)", ret);
 
@@ -466,7 +467,7 @@ void MediaPlayer::decodeMovie(void* ptr)
 	}
 	mHasAudio = true;
 
-	AVStream* stream_audio = mMovieFile->streams[mAudioStreamIndex];
+	AVStream* stream_audio = mFormatCtx->streams[mAudioStreamIndex];
 	mDecoderThread = new Thread();
 
 	mDecoderAudio = new DecoderAudio(stream_audio, mAudioQueue = new PacketQueue(this), mDecoderThread);
@@ -474,7 +475,7 @@ void MediaPlayer::decodeMovie(void* ptr)
 	mDecoderAudio->rendorHook = render;
 	if (-1 != mVideoStreamIndex) {
 		mHasVideo = true;
-		AVStream* stream_video = mMovieFile->streams[mVideoStreamIndex];
+		AVStream* stream_video = mFormatCtx->streams[mVideoStreamIndex];
 		mDecoderVideo = new DecoderVideo(stream_video, mVideoQueue = new PacketQueue(this), NULL);
 		mDecoderVideo->rendorHook = render;
 		mDecoderAudio->bindBuddy(mDecoderVideo);
@@ -506,13 +507,14 @@ void MediaPlayer::decodeMovie(void* ptr)
 			mNeedToSeek = false;
 		}
 
-		int ret = av_read_frame(mMovieFile, &pPacket);
+		int ret = av_read_frame(mFormatCtx, &pPacket);
 
 		if (ret < 0) {
 			LOGD("av_read_frame ret:%d < 0", ret);
-			if (ret == AVERROR_EOF || url_feof(mMovieFile->pb))
+			if (ret == AVERROR_EOF) {
 				eof = 1;
-			if (mMovieFile->pb && mMovieFile->pb->error)
+			}
+			if (mFormatCtx->pb && mFormatCtx->pb->error)
 				eof = 1;
 			if (eof) {
 				mCurrentState = MEDIA_PLAYER_PLAYBACK_COMPLETE;
@@ -536,7 +538,7 @@ void MediaPlayer::decodeMovie(void* ptr)
 				mJustSeeked = false;
 				continue;
 			}
-			unsigned long keyTS = 1000 * newNPT * av_q2d(mMovieFile->streams[pPacket.stream_index]->time_base);
+			unsigned long keyTS = 1000 * newNPT * av_q2d(mFormatCtx->streams[pPacket.stream_index]->time_base);
 			if (mDecoderAudio) {
 				LOGD("set the clock to %ld", keyTS);
 				mDecoderAudio->setRealTimeMS(keyTS);
@@ -545,7 +547,7 @@ void MediaPlayer::decodeMovie(void* ptr)
 			notify(MEDIA_SEEK_COMPLETE);
 		}
 
-		long tmppts = 1000 * pPacket.pts * av_q2d(mMovieFile->streams[pPacket.stream_index]->time_base);
+		long tmppts = 1000 * pPacket.pts * av_q2d(mFormatCtx->streams[pPacket.stream_index]->time_base);
 		// Is this a packet from the video stream?
 		if (pPacket.stream_index == mVideoStreamIndex && mVideoQueue) {
 			mVideoQueue->put(&pPacket);

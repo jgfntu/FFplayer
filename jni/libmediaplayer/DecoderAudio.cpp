@@ -302,17 +302,17 @@ namespace ffplayer
         return 0;
     }
 
-    int DecoderAudio::bytesPerSample(enum SampleFormat format)
+    int DecoderAudio::bytesPerSample(enum AVSampleFormat format)
     {
         switch (format)
         {
-            case SAMPLE_FMT_U8 :
+            case AV_SAMPLE_FMT_U8 :
                 return 1;
 
-            case SAMPLE_FMT_S16 :
+            case AV_SAMPLE_FMT_S16:
                 return 2;
 
-            case SAMPLE_FMT_S32 :
+            case AV_SAMPLE_FMT_S32 :
                 return 4;
 
             default :

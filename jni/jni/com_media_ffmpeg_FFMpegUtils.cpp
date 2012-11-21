@@ -59,16 +59,16 @@ static void FFMpegUtils_saveFrame(AVFrame *pFrame, int width, int height, int iF
 }
 
 static jobject FFMpegUtils_setInputFile(JNIEnv *env, jobject obj, jstring filePath) {
-	AVFormatContext *pFormatCtx;
+	AVFormatContext *pFormatCtx = NULL;
 	const char *_filePath = env->GetStringUTFChars(filePath, NULL);
 	// Open video file
-	if(av_open_input_file(&pFormatCtx, _filePath, NULL, 0, NULL) != 0) {
+	if(avformat_open_input(&pFormatCtx, _filePath, NULL, NULL) != 0) {
 		jniThrowException(env,
 						  "java/io/IOException",
 					      "Can't create input file");
 	}
 	// Retrieve stream information
-	if(av_find_stream_info(pFormatCtx)<0) {
+	if(avformat_find_stream_info(pFormatCtx, NULL)<0) {
 		jniThrowException(env,
 						  "java/io/IOException",
 						  "Couldn't find stream information");
@@ -90,7 +90,7 @@ static void FFMpegUtils_print(JNIEnv *env, jobject obj, jint pAVFormatContext) {
 	// Find the first video stream
 	int videoStream = -1;
 	for (i = 0; i < pFormatCtx->nb_streams; i++)
-		if (pFormatCtx->streams[i]->codec->codec_type == CODEC_TYPE_VIDEO) {
+		if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
 			videoStream = i;
 			break;
 		}
@@ -113,7 +113,7 @@ static void FFMpegUtils_print(JNIEnv *env, jobject obj, jint pAVFormatContext) {
 		return; // Codec not found
 	}
 	// Open codec
-	if (avcodec_open(pCodecCtx, pCodec) < 0) {
+	if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0) {
 		jniThrowException(env,
 						  "java/io/IOException",
 						  "Could not open codec");
@@ -159,8 +159,8 @@ static void FFMpegUtils_print(JNIEnv *env, jobject obj, jint pAVFormatContext) {
 		// Is this a packet from the video stream?
 		if (packet.stream_index == videoStream) {
 			// Decode video frame
-			avcodec_decode_video(pCodecCtx, pFrame, &frameFinished,
-					packet.data, packet.size);
+			avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished,
+					&packet);
 
 			// Did we get a video frame?
 			if (frameFinished) {

@@ -25,49 +25,49 @@ jobject AVFrame_create(JNIEnv *env, AVFrame *frame) {
 	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mPointer", "I"),
 					 (jint)frame);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mKeyFrame", "I"),
 					 frame->key_frame);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mPictType", "I"),
 					 frame->pict_type);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mCodedPictureNumber", "I"),
 					 frame->coded_picture_number);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mDisplayPictureNumber", "I"),
 					 frame->display_picture_number);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mQuality", "I"),
 					 frame->quality);
-	env->SetIntField(result, 
-					 env->GetFieldID(clazz, "mAge", "I"),
-					 frame->age);
-	env->SetIntField(result, 
+//	env->SetIntField(result,
+//					 env->GetFieldID(clazz, "mAge", "I"),
+//					 frame->age);
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mReference", "I"),
 					 frame->reference);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mQstride", "I"),
 					 frame->qstride);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mType", "I"),
 					 frame->type);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mRepeatPict", "I"),
 					 frame->repeat_pict);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mQscaleType", "I"),
 					 frame->qscale_type);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mInterlacedFrame", "I"),
 					 frame->interlaced_frame);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mTopFieldFirst", "I"),
 					 frame->top_field_first);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mPaletteHasChanged", "I"),
 					 frame->palette_has_changed);
-	env->SetIntField(result, 
+	env->SetIntField(result,
 					 env->GetFieldID(clazz, "mBufferHints", "I"),
 					 frame->buffer_hints);
 

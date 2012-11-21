@@ -206,7 +206,7 @@ class MediaPlayer:
         // Mutex                       mNotifyLock;
         // Condition                   mSignal;
         MediaPlayerListener * mListener;
-        AVFormatContext *     mMovieFile;
+        AVFormatContext *     mFormatCtx;
         int                   mAudioStreamIndex;
         int                   mVideoStreamIndex;
         DecoderAudio *        mDecoderAudio;

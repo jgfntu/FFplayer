@@ -39,9 +39,9 @@
 #include "libavformat/avformat.h"
 #include "libavdevice/avdevice.h"
 #include "libswscale/swscale.h"
-#include "libavcodec/opt.h"
+#include "libavutil/opt.h"
 #include "libavcodec/audioconvert.h"
-#include "libavcodec/colorspace.h"
+#include "libavutil/colorspace.h"
 #include "libavutil/fifo.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/avstring.h"
@@ -49,10 +49,10 @@
 #include "libavformat/os_support.h"
 
 #if CONFIG_AVFILTER
-# include "libavfilter/avfilter.h"
-# include "libavfilter/avfiltergraph.h"
-# include "libavfilter/graphparser.h"
-# include "libavfilter/vsrc_buffer.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/avfiltergraph.h"
+#include "libavfilter/avfiltergraph.h"
+//#include "libavfilter/vsrc_buffer.h"
 #endif
 
 #if HAVE_SYS_RESOURCE_H
@@ -643,7 +643,7 @@ static int av_exit(int ret)
 #endif
 
     if (received_sigterm) {
-        __android_log_print(ANDROID_LOG_ERROR, TAG, 
+        __android_log_print(ANDROID_LOG_ERROR, TAG,
             "Received signal %d: terminating.\n",
             (int) received_sigterm);
         exit (255);
@@ -1484,7 +1484,7 @@ static void print_report(AVFormatContext **output_files,
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
             "size=%8.0fkB time=%0.2f bitrate=%6.1fkbits/s",
             (double)total_size / 1024, ti1, bitrate);
-		
+
         if (nb_frames_dup || nb_frames_drop)
           snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " dup=%d drop=%d",
                   nb_frames_dup, nb_frames_drop);
@@ -2650,8 +2650,8 @@ static int av_transcode(AVFormatContext **output_files,
 
     /* dump report by using the first video and audio streams */
     print_report(output_files, ost_table, nb_ostreams, 1);
-	
-	
+
+
 
     /* close each encoder */
     for(i=0;i<nb_ostreams;i++) {
@@ -4329,7 +4329,7 @@ static void FFMpeg_init(JNIEnv *env, jobject obj) {
                           "java/lang/RuntimeException",
                           "can't load clb_onReport callback");
     }
-	
+
 #if HAVE_ISATTY
     if(isatty(STDIN_FILENO))
         url_set_interrupt_cb(decode_interrupt_cb);
@@ -4383,36 +4383,36 @@ static void FFMpeg_parseOptions(JNIEnv *env, jobject obj, jobjectArray args) {
 	int i = 0;
 	int argc = 0;
 	char **argv = NULL;
-	
+
 	if (args != NULL) {
 		argc = (*env)->GetArrayLength(env, args);
 		argv = (char **) malloc(sizeof(char *) * argc);
-		
+
 		for(i=0;i<argc;i++)
 		{
 			jstring str = (jstring)(*env)->GetObjectArrayElement(env, args, i);
-			argv[i] = (char *)(*env)->GetStringUTFChars(env, str, NULL);   
+			argv[i] = (char *)(*env)->GetStringUTFChars(env, str, NULL);
 		}
-	}	
-	
+	}
+
     /* parse options */
     parse_options(argc, argv, options, opt_output_file);
-	
+
     if(nb_output_files <= 0 && nb_input_files == 0) {
-        jniThrowException(env, 
+        jniThrowException(env,
                           "java/lang/RuntimeException",
                           "Use -h to get full help or, even better, run 'man ffmpeg");
     }
-	
+
     /* file converter / grab */
     if (nb_output_files <= 0) {
-        jniThrowException(env, 
+        jniThrowException(env,
                           "java/lang/RuntimeException",
                           "At least one output file must be specified");
     }
-	
+
     if (nb_input_files == 0) {
-        jniThrowException(env, 
+        jniThrowException(env,
                           "java/lang/RuntimeException",
                           "At least one input file must be specified");
     }
@@ -4428,9 +4428,9 @@ static jobject FFMpeg_setInputFile(JNIEnv *env, jobject obj, jstring filePath) {
 		}
 	jobject *file = AVFormatContext_create(env, fileContext);
 	jobject *inFormat = AVInputFormat_create(env, fileContext->iformat);
-	jfieldID f = (*env)->GetFieldID(env, 
-									AVFormatContext_getClass(env), 
-									"mInFormat", 
+	jfieldID f = (*env)->GetFieldID(env,
+									AVFormatContext_getClass(env),
+									"mInFormat",
 									AVInputFormat_getClassSignature());
 	(*env)->SetObjectField(env, file, f, inFormat);
 	return file;
@@ -4466,7 +4466,7 @@ static void FFMpeg_convert(JNIEnv *env, jobject obj, jlong outputFile, jlong inp
                      nb_input_files,
                      stream_maps,
                      nb_stream_maps) < 0) {
-        jniThrowException(env, 
+        jniThrowException(env,
                           "java/lang/RuntimeException",
                           "Error in conversion");
     }
