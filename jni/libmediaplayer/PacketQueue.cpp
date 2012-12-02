@@ -1,7 +1,3 @@
-/*
- *  mediaplayer.cpp
- *
- */
 #define DEBUG 1
 #define LOG_TAG "PacketQueue"
 

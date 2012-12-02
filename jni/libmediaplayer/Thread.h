@@ -2,7 +2,7 @@
 #ifndef FFMPEG_THREAD_H
 #define FFMPEG_THREAD_H
 
-#include "../jni/jniUtils.h"
+#include "../libffmpeg_jni/jniUtils.h"
 #include <pthread.h>
 #include "BuddyRunnable.h"
 #include <common/logwrapper.h>

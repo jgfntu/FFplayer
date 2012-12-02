@@ -23,7 +23,7 @@ import android.widget.Toast;
 
 import com.media.ffmpeg.FFMpeg;
 
-import faywong.ffmpeg.ui.R;
+import com.faywong.ffmpeg.R;
 
 //~--- JDK imports ------------------------------------------------------------
 

@@ -21,8 +21,6 @@ import java.io.IOException;
 public class FFMpeg {
     public static final String TAG = "FFMPEG";
 
-    /* These libs is compiled for GingerBread, which is the default target OS */
-    public static final String[] defaultLIBS = new String[] { "ffmpeg", "jniaudio9", "jnivideo9", "ffmpeg_jni9" };
     public static final String[] EXTENSIONS  = new String[] {
         ".mp4", ".flv", ".avi", ".wmv", ".ts", ".ogg", ".ogv", ".rm", ".rmvb", ".mkv"
     };
@@ -38,8 +36,8 @@ public class FFMpeg {
             throw new FFMpegException(FFMpegException.LEVEL_FATAL, "Couldn't load native libs");
         }
 
-        native_avcodec_register_all();
-        native_av_register_all();
+        native_init();
+        //native_av_register_all();
         mConverting = false;
     }
 
@@ -53,7 +51,7 @@ public class FFMpeg {
         return new String[] {
             "jniaudio",      // used for access to android
             "jnivideo",
-            "ffmpeg_jni"              // ffmpeg libs compiled to jni lib
+            "ffmpeg_jni"     // ffmpeg libs compiled to jni lib
         };
     }
 
@@ -250,6 +248,7 @@ public class FFMpeg {
         sLoaded = false;
     }
 
+    private native void native_init();
     private native void native_avcodec_register_all();
 
     // { "native_avdevice_register_all", "()V", (void*) avdevice_register_all },

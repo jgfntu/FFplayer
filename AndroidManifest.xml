@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="faywong.ffmpeg.ui"
+    package="com.faywong.ffmpeg"
     android:installLocation="internalOnly"
     android:versionCode="1"
     android:versionName="1.0" >
-    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="8"/>
+    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="8" android:maxSdkVersion="16"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/icon"
         android:label="@string/app_name" >
         <activity
-            android:name=".FFMpegPlayerActivity"
+            android:name="faywong.ffmpeg.ui.FFMpegPlayerActivity"
             android:label="@string/app_name"
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
@@ -142,7 +145,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".FFMpegFileExplorer"
+            android:name="faywong.ffmpeg.ui.FFMpegFileExplorer"
             android:label="@string/Explorer_app_name"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustUnspecified|stateHidden" >
@@ -155,8 +158,5 @@
     </application>
 
 
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.INTERNET" />
 
 </manifest>

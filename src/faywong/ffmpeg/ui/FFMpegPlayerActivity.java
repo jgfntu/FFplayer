@@ -12,7 +12,7 @@ import com.media.ffmpeg.FFMpeg;
 import com.media.ffmpeg.FFMpegException;
 import com.media.ffmpeg.android.FFMpegMovieViewAndroid;
 
-import faywong.ffmpeg.ui.R;
+import com.faywong.ffmpeg.R;
 
 import java.io.IOException;
 

@@ -12,7 +12,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import faywong.ffmpeg.ui.R;
+import com.faywong.ffmpeg.R;
 
 import java.io.File;
 

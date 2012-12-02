@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <jni.h>
 #include <android/Errors.h>
-#include "../jni/jniUtils.h"
+#include "../libffmpeg_jni/jniUtils.h"
 #include "DecoderVideo.h"
 #include "DecoderAudio.h"
 

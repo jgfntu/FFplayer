@@ -293,7 +293,7 @@ status_t MediaPlayer::suspend() {
 	free(mDecoderVideo);
 
 	// Close the video file
-	av_close_input_file(mFormatCtx);
+	avformat_close_input(&mFormatCtx);
 
 	//close OS drivers
 	Output::AudioDriver_unregister();
